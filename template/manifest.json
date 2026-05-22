@@ -1,0 +1,78 @@
+{
+  "documenterVersion": "0.1.0",
+  "generatedAt": "2026-05-22T23:19:45.721Z",
+  "files": {
+    "docs/assets/app.js": {
+      "sha256": "a7a0853e840a645b058b0b3bff911cadfc015cc9ca402387a9d3b4c84f012f23",
+      "size": 16488
+    },
+    "docs/assets/style.css": {
+      "sha256": "50fb8932f6fd2db0703c0bb8bfada1cad022ef6a17dda0b002c2f2139a16a28a",
+      "size": 9879
+    },
+    "docs/assets/vendor/js-yaml.min.js": {
+      "sha256": "0de3dec92d20eab9e0b46a5d928cd45ec025d73e348ddf458dbfb01da00cb473",
+      "size": 39513
+    },
+    "docs/assets/vendor/markdown-it.min.js": {
+      "sha256": "c833317a56b17b17cc1910f3b7004447573487cd1fed4c1bcef90afbcbf5c234",
+      "size": 123524
+    },
+    "docs/assets/vendor/purify.min.js": {
+      "sha256": "10d5177ae761d2095c7f5225e46803471a46e52a51b238299722791490911eb4",
+      "size": 26139
+    },
+    "docs/assets/vendor/versions.json": {
+      "sha256": "6c3e2663e653d20585f00f119bf67eacbc6cbaeb0b9d93fb5b17e71bba914a96",
+      "size": 76
+    },
+    "docs/documentation-architecture.md": {
+      "sha256": "edbef53e8a99a355b8fd3008d88a2059c073f9f335ed590ba191b70de54ed6df",
+      "size": 14254
+    },
+    "docs/documentation-md-contract.md": {
+      "sha256": "28460f4a326a325b5b02243b843b4e2e00b6faa22fce772b52318197bb39ef4c",
+      "size": 6071
+    },
+    "docs/documentation-style-guide.md": {
+      "sha256": "9cbcea1687784227d13d927390d5332ed80941107b984fd9a7f49a061ea8ead8",
+      "size": 4181
+    },
+    "docs/index.html": {
+      "sha256": "102b63a7a4638d105d12dbc15038c088314deb5c460a298afc3f528ec2abcf35",
+      "size": 630
+    },
+    "docs/index.md": {
+      "sha256": "98bc9412d0543143e93075a01ab548cf9ed3d22d2e8946f1f26bb7047692e6df",
+      "size": 674
+    },
+    "docs/templates/contract-template.md": {
+      "sha256": "bf2fecffe2a841e6f22e91280aaef5ea19de9c8e594679d2f2e6afd7fec8092e",
+      "size": 5145
+    },
+    "docs/templates/decision-record-template.md": {
+      "sha256": "15c1f6da542ea905251d7ac61d69eacbba4fae36d6e063cd0cf7d4f2eb7b9bde",
+      "size": 2345
+    },
+    "docs/templates/document-template.md": {
+      "sha256": "78107fcc47fcd0d490aca86124ae89c13696dda1442e1afed53a7b73b7707ca5",
+      "size": 1923
+    },
+    "docs/templates/product-requirements-document-template.md": {
+      "sha256": "ca318ea551e28d7038c91ef661685d08f1214996e52ca51034fd19e43c8e5351",
+      "size": 6135
+    },
+    "docs/templates/standard-template.md": {
+      "sha256": "33796b09fe22473d683d79c3e7cdd7f75be7122d1b5b776268309df80381315c",
+      "size": 3132
+    },
+    "docs/templates/system-architecture-template.md": {
+      "sha256": "f5bbfa6f48b4678c5ec2f0a0d8709fa2f7ca197f25cff0a622c9b8f2d85079f2",
+      "size": 9449
+    },
+    "docs/templates/technical-architecture-template.md": {
+      "sha256": "77f5120954404839d61e1f543bfb602e1f6b11d8770cedb5f4843eb8421af0a1",
+      "size": 1912
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "documenter",
+  "version": "0.1.0",
+  "description": "Scaffold and maintain a repo-local markdown documentation system in any project.",
+  "type": "module",
+  "bin": {
+    "documenter": "./bin/documenter.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "bin",
+    "src",
+    "lib",
+    "template"
+  ],
+  "scripts": {
+    "sync-vendor": "node scripts/sync-vendor.mjs",
+    "manifest": "node scripts/build-manifest.mjs"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0",
+    "markdown-it": "^14.0.0",
+    "dompurify": "^3.0.0"
+  },
+  "private": true,
+  "license": "UNLICENSED"
+}
