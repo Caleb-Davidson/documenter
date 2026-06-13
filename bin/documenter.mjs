@@ -46,11 +46,11 @@ Usage:
   documenter <command> [options]
 
 Commands:
-  init      Scaffold docs/, scripts/, and package.json entries in the current project.
+  init      Scaffold docs/ and a docs:lint package.json script in the current project.
             Skips files that already exist (use --force to overwrite).
-  update    Refresh platform files (docs/assets, docs/templates, docs/index.html,
-            scripts/) and re-merge package.json. Does not touch user-authored markdown.
-  lint      Run scripts/docs-lint.mjs in the current project.
+  update    Refresh platform files (docs/assets, docs/templates, docs/index.html)
+            and re-merge package.json. Does not touch user-authored markdown.
+  lint      Run the docs linter against docs/ in the current project.
 
 Options:
   --cwd <path>   Target directory (default: process.cwd()).
