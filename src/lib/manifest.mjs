@@ -1,20 +1,70 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
-import { join, relative, sep } from "node:path";
+import { extname, join, relative, sep } from "node:path";
 import { exists } from "./fs.mjs";
 
 export const MANIFEST_FILENAME = "manifest.json";
 export const STATE_FILENAME = ".documenter.json";
 
 /**
- * SHA-256 hex digest of a file's bytes.
+ * Extensions whose 0x0D bytes are line endings, not data. Hashing normalizes
+ * CRLF/CR to LF for these so drift detection tracks content, not line endings
+ * (git autocrlf, editors, and formatters all rewrite EOLs and documenter can't
+ * control them). Anything not listed falls back to a NUL-byte sniff.
+ */
+const TEXT_EXTENSIONS = new Set([
+  ".md", ".markdown", ".txt", ".html", ".htm", ".css", ".js", ".mjs", ".cjs",
+  ".json", ".yml", ".yaml", ".svg", ".xml", ".csv"
+]);
+
+/**
+ * Decide whether a file's content should be hashed as text (line-ending normalized)
+ * or as raw bytes. Extension allowlist first; for unknown extensions, treat a file
+ * as binary only if its head contains a NUL byte.
+ *
+ * @param {string} relPath POSIX-normalized relative path (used for the extension).
+ * @param {Buffer} buf File contents.
+ * @returns {boolean}
+ */
+export function isTextFile(relPath, buf) {
+  if (TEXT_EXTENSIONS.has(extname(relPath).toLowerCase())) return true;
+  const head = buf.subarray(0, Math.min(buf.length, 8000));
+  return !head.includes(0x00);
+}
+
+/**
+ * Content hash + size for a buffer, line-ending agnostic for text files.
+ *
+ * Text files: CRLF and lone CR are normalized to LF before hashing, so identical
+ * content hashes the same regardless of the EOLs git/editors happened to write.
+ * Binary files: raw bytes are hashed unchanged (a 0x0D in a PNG/font is data, not
+ * a newline; normalizing it would corrupt the hash).
+ *
+ * This is the single helper both the record-time path (buildManifest) and the
+ * check-time path (update) route through, so the two can't diverge again.
+ *
+ * @param {Buffer} buf
+ * @param {boolean} isText
+ * @returns {{ sha256: string, size: number }}
+ */
+export function hashBuffer(buf, isText) {
+  const data = isText
+    ? Buffer.from(buf.toString("utf-8").replace(/\r\n?/g, "\n"), "utf-8")
+    : buf;
+  return { sha256: createHash("sha256").update(data).digest("hex"), size: data.length };
+}
+
+/**
+ * SHA-256 hex digest of a file's content. Line endings are normalized first for
+ * text files; binary files are hashed raw. See {@link hashBuffer}.
  *
  * @param {string} path
+ * @param {boolean} isText
  * @returns {Promise<string>}
  */
-export async function hashFile(path) {
+export async function hashFile(path, isText) {
   const buf = await readFile(path);
-  return createHash("sha256").update(buf).digest("hex");
+  return hashBuffer(buf, isText).sha256;
 }
 
 /**
@@ -55,18 +105,21 @@ function toPosix(p) {
 /**
  * Build a manifest object for the given root by hashing every file (excluding the manifest itself).
  *
+ * Each entry records `isText`, decided here and consumed by both init and update so
+ * the text/binary decision is never re-sniffed (and never disagrees) across paths.
+ *
  * @param {string} root
  * @param {string} cliVersion
- * @returns {Promise<{ documenterVersion: string, generatedAt: string, files: Record<string, { sha256: string, size: number }> }>}
+ * @returns {Promise<{ documenterVersion: string, generatedAt: string, files: Record<string, { sha256: string, size: number, isText: boolean }> }>}
  */
 export async function buildManifest(root, cliVersion) {
   const entries = await walkFiles(root, (rel) => rel === MANIFEST_FILENAME);
   const files = {};
   for (const entry of entries) {
-    files[entry.relativePath] = {
-      sha256: await hashFile(entry.absolutePath),
-      size: entry.size
-    };
+    const buf = await readFile(entry.absolutePath);
+    const isText = isTextFile(entry.relativePath, buf);
+    const { sha256, size } = hashBuffer(buf, isText);
+    files[entry.relativePath] = { sha256, size, isText };
   }
   return {
     documenterVersion: cliVersion,

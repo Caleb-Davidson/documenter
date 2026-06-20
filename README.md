@@ -6,6 +6,8 @@ documenter owns the heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`) a
 
 Each managed file is tracked by SHA-256 hash. `documenter update` detects whether a file in your project is unchanged from what we wrote (safe to update) or modified locally (preserved, with `--force` to override).
 
+Hashing is **line-ending agnostic** for text files: CRLF/LF differences never register as drift, because line endings are environment-determined (git autocrlf, editors, formatters all rewrite them). Binary files are hashed raw. When documenter writes a managed file it uses the line ending the target repo wants (resolved from `.gitattributes`, `core.eol`, then `core.autocrlf`; LF otherwise — overridable with `DOCUMENTER_EOL=lf|crlf`), so its output doesn't churn against git.
+
 ## Install
 
 ```sh
@@ -52,6 +54,8 @@ Refresh managed files. Each file is classified by hash:
 | `current` | Target hash matches CLI manifest | Skip |
 | `stock-old` | Target hash matches what we last wrote; CLI has newer version | Update |
 | `drifted` | Target hash differs from both what we wrote and the new version | Skip with warning |
+
+Classification compares content hashes, not line endings — a file re-saved with different EOLs (e.g. by git checkout or a formatter) stays `current`, not `drifted`.
 
 ```sh
 documenter update                        # safe: skips drifted files
@@ -132,12 +136,12 @@ documenter/
 ├── lib/docs-lint.mjs                    # CLI-internal docs linter (uses documenter's node_modules)
 ├── src/
 │   ├── commands/{init,update,lint}.mjs
-│   └── lib/{fs,paths,manifest,package-json}.mjs
+│   └── lib/{fs,paths,manifest,package-json,eol}.mjs
 ├── scripts/
 │   ├── sync-vendor.mjs                  # maintainer: copy bundles from node_modules → template/
 │   └── build-manifest.mjs               # maintainer: regenerate template/manifest.json
 └── template/                            # source of truth for everything scaffolded into targets
-    ├── manifest.json                    # SHA-256 + size of every file under template/
+    ├── manifest.json                    # SHA-256 + size + isText of every file under template/
     └── docs/...
 ```
 

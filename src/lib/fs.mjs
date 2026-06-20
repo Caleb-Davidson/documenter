@@ -1,4 +1,4 @@
-import { access, copyFile, mkdir, readdir } from "node:fs/promises";
+import { access, copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 
 export async function exists(path) {
@@ -8,6 +8,31 @@ export async function exists(path) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Copy a managed file from the template to a target path, creating parent dirs.
+ *
+ * Text files are normalized to LF and re-emitted with the requested `eol`, so the
+ * output matches the target repo's line-ending convention regardless of how the
+ * template happens to be checked out. Binary files are copied byte-for-byte.
+ *
+ * @param {string} src Template source path.
+ * @param {string} dest Target destination path.
+ * @param {object} opts
+ * @param {boolean} opts.isText Whether the file is text (from the manifest).
+ * @param {string} opts.eol Line ending to write for text files ("\n" or "\r\n").
+ * @returns {Promise<void>}
+ */
+export async function writeManagedFile(src, dest, { isText, eol }) {
+  await mkdir(dirname(dest), { recursive: true });
+  if (!isText) {
+    await copyFile(src, dest);
+    return;
+  }
+  const normalized = (await readFile(src, "utf-8")).replace(/\r\n?/g, "\n");
+  const out = eol === "\r\n" ? normalized.replace(/\n/g, "\r\n") : normalized;
+  await writeFile(dest, out, "utf-8");
 }
 
 /**

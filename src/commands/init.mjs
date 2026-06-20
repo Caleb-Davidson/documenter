@@ -1,9 +1,8 @@
-import { copyFile, mkdir } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { exists } from "../lib/fs.mjs";
+import { createEolResolver } from "../lib/eol.mjs";
+import { exists, writeManagedFile } from "../lib/fs.mjs";
 import {
-  hashFile,
   MANIFEST_FILENAME,
   newState,
   readCliVersion,
@@ -43,6 +42,7 @@ export async function runInit(argv) {
     );
   }
 
+  const eolResolver = await createEolResolver(target);
   const state = newState(cliVersion);
   let copied = 0;
   let skipped = 0;
@@ -57,8 +57,9 @@ export async function runInit(argv) {
       skipped += 1;
       continue;
     }
-    await mkdir(dirname(dest), { recursive: true });
-    await copyFile(src, dest);
+    const isText = info.isText ?? true;
+    const eol = isText ? await eolResolver.eolFor(relPath) : "\n";
+    await writeManagedFile(src, dest, { isText, eol });
     copied += 1;
     state.managedFiles[relPath] = {
       sha256: info.sha256,

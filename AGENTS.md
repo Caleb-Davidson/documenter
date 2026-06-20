@@ -15,15 +15,16 @@
 
 - `bin/documenter.mjs`: CLI entry point with `#!/usr/bin/env node` shebang. Parses the subcommand and dispatches to handlers. Also handles `--help` and `--version`.
 - `src/commands/{init,update,lint}.mjs`: One file per subcommand. Each parses its own flags via `util.parseArgs` and is invoked from `bin/documenter.mjs`.
-- `src/lib/fs.mjs`: `exists()` and `copyTree()` helpers.
+- `src/lib/fs.mjs`: `exists()`, `copyTree()`, and `writeManagedFile()` helpers. `writeManagedFile()` normalizes a text file to LF then re-emits it with the requested EOL; binary files are copied byte-for-byte.
 - `src/lib/paths.mjs`: Resolves `PACKAGE_ROOT` and `TEMPLATE_ROOT` from this file's location, so the CLI finds its own `template/` regardless of where the user invokes it from.
-- `src/lib/manifest.mjs`: Manifest and state-file primitives — `hashFile()`, `walkFiles()`, `buildManifest()`, `readManifest()`, `writeManifest()`, `readState()`, `writeState()`, `newState()`, `readCliVersion()`.
+- `src/lib/eol.mjs`: `createEolResolver(targetRoot)` → `eolFor(relPath)`. Resolves the line ending documenter should write per target path: `DOCUMENTER_EOL` env → `.gitattributes` (`eol`/`text`) → `core.eol` → `core.autocrlf` → LF. Spawns `git`; falls back to LF if git is missing or the dir isn't a repo.
+- `src/lib/manifest.mjs`: Manifest and state-file primitives — `hashBuffer()`, `hashFile()`, `isTextFile()`, `walkFiles()`, `buildManifest()`, `readManifest()`, `writeManifest()`, `readState()`, `writeState()`, `newState()`, `readCliVersion()`. `hashBuffer(buf, isText)` is the single line-ending-agnostic hasher both the record path (`buildManifest`) and the check path (`update`) route through; `hashFile(path, isText)` wraps it. Text files are hashed over LF-normalized content; binary files are hashed raw.
 - `src/lib/package-json.mjs`: `REQUIRED_SCRIPTS` (just `"docs:lint": "documenter lint"`), `mergeDocsScaffold()`, `minimalPackageJson()`. Additive merge — never overwrites existing keys in target package.json.
 - `lib/docs-lint.mjs`: The docs linter itself. Invoked via `child_process.spawn` with `cwd=target` by [src/commands/lint.mjs](src/commands/lint.mjs). Hardcodes `DOCS_DIR = "docs"` and walks relative paths, so it works against whatever cwd it's spawned in.
 - `scripts/sync-vendor.mjs`: Maintainer script. Copies `markdown-it.min.js`, `purify.min.js`, `js-yaml.min.js` from `node_modules/*/dist/` into `template/docs/assets/vendor/`, and writes `versions.json` alongside them.
 - `scripts/build-manifest.mjs`: Maintainer script. Walks `template/`, SHA-256 hashes every file, writes `template/manifest.json`.
 - `template/`: Source of truth for everything scaffolded into target projects. The whole tree is hashed by the manifest generator.
-- `template/manifest.json`: Generated. Maps every relative path under `template/` to `{ sha256, size }`. Read by `init` and `update` to decide what to copy and how to classify drift.
+- `template/manifest.json`: Generated. Maps every relative path under `template/` to `{ sha256, size, isText }`. `sha256`/`size` are over LF-normalized content for text files (so they're stable regardless of how the maintainer's checkout handles EOLs); `isText` is the text/binary decision, consumed by both `init` and `update` so neither re-sniffs. Read by `init` and `update` to decide what to copy and how to classify drift.
 - `template/docs/`: The docs shell (`index.html`, `assets/`), three governing docs, seven copyable page templates, and the navigation manifest (`index.md`).
 
 ## Commands
@@ -62,7 +63,7 @@ The runtime flow for any documenter command:
 
 1. **`bin/documenter.mjs`** — Receives `process.argv`. Picks subcommand from `argv[2]`. Looks up the handler in the `SUBCOMMANDS` map and invokes it with the remaining args.
 2. **Subcommand handler** (in `src/commands/`) — Parses its own flags. Loads `template/manifest.json` if needed via `readManifest()`. Reads/writes the target's `.documenter.json` via `readState()`/`writeState()`.
-3. **For `init` and `update`** — Walk the manifest, classify each file by hash (`current` / `expected` from state / `newHash` from manifest), copy or skip, update state.
+3. **For `init` and `update`** — Walk the manifest, classify each file by hash (`current` / `expected` from state / `newHash` from manifest), copy or skip, update state. Hashes are compared line-ending-agnostically via `hashBuffer()`, and files are written with the target repo's preferred EOL via `createEolResolver()`.
 4. **For `lint`** — Spawn `lib/docs-lint.mjs` as a child process with `cwd=target`. `js-yaml` resolves from documenter's `node_modules` because Node resolution walks up from the script's own location, not cwd.
 
 State semantics that matter:
@@ -81,7 +82,8 @@ State semantics that matter:
 - **The internal linter at `lib/docs-lint.mjs` must remain a standalone Node script** that runs with `cwd=target` and resolves `js-yaml` from documenter's own `node_modules`. Don't refactor it to depend on `src/lib/` helpers — keep it self-contained.
 - **State-update semantics on drift**: when classification is `drifted` and we skip, preserve the prior state entry verbatim. When classification is `forced` and we overwrite, update state to the new hash. See the test scenarios in README §Verified end-to-end.
 - **`additive merge only` for target `package.json`.** [src/lib/package-json.mjs](src/lib/package-json.mjs) must never overwrite an existing script or dependency in a user's package.json.
-- **All template files are POSIX-normalized in the manifest** (forward slashes in keys). [src/lib/manifest.mjs](src/lib/manifest.mjs:43) handles this via `toPosix()`. Don't introduce platform-specific path keys.
+- **All template files are POSIX-normalized in the manifest** (forward slashes in keys). [src/lib/manifest.mjs](src/lib/manifest.mjs:101) handles this via `toPosix()`. Don't introduce platform-specific path keys.
+- **Hashing is line-ending agnostic for text files.** Both the record path (`buildManifest`) and the check path (`update`) must route through the one shared `hashBuffer()` helper so they can never diverge. Don't add a second hashing path or compare raw bytes for text — that reintroduces the Windows false-drift bug (CRLF on disk vs LF manifest). Binary files (per `isTextFile()`) are hashed raw — never normalize them.
 
 ## Agent Workflow
 

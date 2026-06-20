@@ -1,7 +1,7 @@
-import { copyFile, mkdir } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { exists } from "../lib/fs.mjs";
+import { createEolResolver } from "../lib/eol.mjs";
+import { exists, writeManagedFile } from "../lib/fs.mjs";
 import {
   hashFile,
   MANIFEST_FILENAME,
@@ -59,6 +59,14 @@ export async function runUpdate(argv) {
 
   const priorState = (await readState(target)) ?? newState(cliVersion);
   const nextState = newState(cliVersion);
+  const eolResolver = await createEolResolver(target);
+
+  /** Write a managed file from the template using the target's preferred EOL. */
+  async function writeFromTemplate(src, dest, relPath, info) {
+    const isText = info.isText ?? true;
+    const eol = isText ? await eolResolver.eolFor(relPath) : "\n";
+    await writeManagedFile(src, dest, { isText, eol });
+  }
 
   const reports = [];
   let added = 0;
@@ -72,13 +80,12 @@ export async function runUpdate(argv) {
     const dest = join(target, relPath);
     const expected = priorState.managedFiles?.[relPath]?.sha256 ?? null;
     const newHash = info.sha256;
-    const current = (await exists(dest)) ? await hashFile(dest) : null;
+    const current = (await exists(dest)) ? await hashFile(dest, info.isText ?? true) : null;
 
     const classification = classify({ current, expected, newHash });
 
     if (classification === "new") {
-      await mkdir(dirname(dest), { recursive: true });
-      await copyFile(src, dest);
+      await writeFromTemplate(src, dest, relPath, info);
       added += 1;
       reports.push({ classification, path: relPath });
       nextState.managedFiles[relPath] = { sha256: newHash, writtenBy: cliVersion, writtenAt: nextState.lastSyncedAt };
@@ -92,8 +99,7 @@ export async function runUpdate(argv) {
     }
 
     if (classification === "stock-old") {
-      await mkdir(dirname(dest), { recursive: true });
-      await copyFile(src, dest);
+      await writeFromTemplate(src, dest, relPath, info);
       updated += 1;
       reports.push({ classification, path: relPath });
       nextState.managedFiles[relPath] = { sha256: newHash, writtenBy: cliVersion, writtenAt: nextState.lastSyncedAt };
@@ -102,8 +108,7 @@ export async function runUpdate(argv) {
 
     // drifted
     if (values.force) {
-      await mkdir(dirname(dest), { recursive: true });
-      await copyFile(src, dest);
+      await writeFromTemplate(src, dest, relPath, info);
       forced += 1;
       reports.push({ classification: "forced", path: relPath });
       nextState.managedFiles[relPath] = { sha256: newHash, writtenBy: cliVersion, writtenAt: nextState.lastSyncedAt };
