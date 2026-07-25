@@ -26,6 +26,11 @@ const vendorPackages = [
     pkg: "js-yaml",
     from: resolve(repoRoot, "node_modules/js-yaml/dist/js-yaml.min.js"),
     to: resolve(vendorDir, "js-yaml.min.js")
+  },
+  {
+    pkg: "mermaid",
+    from: resolve(repoRoot, "node_modules/mermaid/dist/mermaid.min.js"),
+    to: resolve(vendorDir, "mermaid.min.js")
   }
 ];
 

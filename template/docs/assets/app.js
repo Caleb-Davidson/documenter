@@ -114,6 +114,7 @@ var markdown = window.markdownit ? window.markdownit({
     document.body.appendChild(shell);
     setupResponsiveSidebar(shell);
     markCurrentNavLink(pagePath);
+    renderMermaidDiagrams(content);
 
     if (isShell) {
       window.addEventListener("hashchange", function () {
@@ -486,6 +487,118 @@ function parseMdSource(mdText, inShell) {
     content: parsed.content || "",
     html: doc.body.innerHTML
   };
+}
+
+function renderMermaidDiagrams(root) {
+  if (!root || !window.mermaid) { return; }
+
+  // markdown-it renders ```mermaid fences as <pre><code class="language-mermaid">.
+  // Mermaid renders elements carrying the "mermaid" class, so re-host the source
+  // text into <pre class="mermaid"> nodes before invoking the renderer.
+  var sources = Array.from(root.querySelectorAll("code.language-mermaid"));
+  if (!sources.length) { return; }
+
+  var hosts = sources.map(function (code) {
+    var pre = code.parentElement;
+    var target = (pre && pre.tagName === "PRE") ? pre : code;
+    var host = document.createElement("pre");
+    host.className = "mermaid";
+    var source = code.textContent || "";
+    host.textContent = source;
+    // Preserve the source so diagrams can be re-rendered when the OS theme flips.
+    host.dataset.mermaidSource = source;
+    target.replaceWith(host);
+    return host;
+  });
+
+  runMermaid(hosts);
+
+  // The shell themes itself from prefers-color-scheme via CSS variables; keep the
+  // diagrams in sync by re-rendering them with the matching mermaid theme.
+  var darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  if (darkQuery.addEventListener) {
+    darkQuery.addEventListener("change", function () {
+      hosts.forEach(function (host) {
+        host.removeAttribute("data-processed");
+        host.innerHTML = "";
+        host.textContent = host.dataset.mermaidSource || "";
+      });
+      runMermaid(hosts);
+    });
+  }
+}
+
+// Shared diagram palette, sourced from the docs-shell CSS tokens in style.css so
+// mermaid diagrams and referenced SVGs (see templates/diagram-template.svg) read
+// as one system. Keep these values in sync with that template's <style> block.
+var DIAGRAM_FONT = 'Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+function diagramPalette(dark) {
+  return dark
+    ? { node: "#303b43", border: "#5d6f7d", text: "#eeeeee", line: "#31c4ca", soft: "#37444d", bg: "#252d34" }
+    : { node: "#ffffff", border: "#d8ddea", text: "#1f2937", line: "#2563eb", soft: "#f8faff", bg: "#f7f8fc" };
+}
+
+function mermaidThemeVariables(p) {
+  return {
+    fontFamily: DIAGRAM_FONT,
+    background: p.bg,
+    // Flowchart nodes/edges
+    mainBkg: p.node,
+    primaryColor: p.node,
+    primaryBorderColor: p.border,
+    primaryTextColor: p.text,
+    nodeBorder: p.border,
+    lineColor: p.line,
+    textColor: p.text,
+    secondaryColor: p.soft,
+    tertiaryColor: p.soft,
+    tertiaryBorderColor: p.border,
+    edgeLabelBackground: p.bg,
+    clusterBkg: p.soft,
+    clusterBorder: p.border,
+    // Sequence diagrams
+    actorBkg: p.node,
+    actorBorder: p.border,
+    actorTextColor: p.text,
+    signalColor: p.line,
+    signalTextColor: p.text,
+    labelBoxBkgColor: p.node,
+    labelBoxBorderColor: p.border,
+    labelTextColor: p.text,
+    noteBkgColor: p.soft,
+    noteBorderColor: p.border,
+    noteTextColor: p.text
+  };
+}
+
+function runMermaid(hosts) {
+  var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  try {
+    window.mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      themeVariables: mermaidThemeVariables(diagramPalette(prefersDark))
+    });
+    var result = window.mermaid.run({ nodes: hosts });
+    if (result && typeof result.then === "function") {
+      result.then(function () { roundMermaidNodes(hosts); }, function () { /* per-diagram errors render inline */ });
+    }
+  } catch (_error) {
+    // Renderer unavailable or threw synchronously: leave the source text visible.
+  }
+}
+
+// Mermaid draws [square] flowchart nodes with no corner radius; nudge them to the
+// same subtle rounding used by the referenced-SVG template so the two match.
+function roundMermaidNodes(hosts) {
+  hosts.forEach(function (host) {
+    host.querySelectorAll(".node rect").forEach(function (rect) {
+      rect.setAttribute("rx", "4");
+      rect.setAttribute("ry", "4");
+    });
+  });
 }
 
 function parseFrontMatterYaml(mdText) {

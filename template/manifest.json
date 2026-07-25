@@ -1,15 +1,15 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-06-20T20:34:17.589Z",
+  "generatedAt": "2026-07-25T22:44:29.366Z",
   "files": {
     "docs/assets/app.js": {
-      "sha256": "a7a0853e840a645b058b0b3bff911cadfc015cc9ca402387a9d3b4c84f012f23",
-      "size": 16488,
+      "sha256": "a50919525f25b4f63e32fca2511ae9fb6f4a492ef3e9db4987bde709066cdb7d",
+      "size": 20452,
       "isText": true
     },
     "docs/assets/style.css": {
-      "sha256": "50fb8932f6fd2db0703c0bb8bfada1cad022ef6a17dda0b002c2f2139a16a28a",
-      "size": 9879,
+      "sha256": "e8643548088d3f81c36b7ebc5bad5a93e40b3519b93da836b23b992fa47cf5f1",
+      "size": 10411,
       "isText": true
     },
     "docs/assets/vendor/js-yaml.min.js": {
@@ -22,14 +22,19 @@
       "size": 123524,
       "isText": true
     },
+    "docs/assets/vendor/mermaid.min.js": {
+      "sha256": "74d7c46dabca328c2294733910a8aa1ed0c37451776e8d5295da38a2b758fb9b",
+      "size": 3565102,
+      "isText": true
+    },
     "docs/assets/vendor/purify.min.js": {
       "sha256": "10d5177ae761d2095c7f5225e46803471a46e52a51b238299722791490911eb4",
       "size": 26139,
       "isText": true
     },
     "docs/assets/vendor/versions.json": {
-      "sha256": "6c3e2663e653d20585f00f119bf67eacbc6cbaeb0b9d93fb5b17e71bba914a96",
-      "size": 76,
+      "sha256": "1c9097e5a86d6d6853be4afea20db3624aaccad7b9f7d8fb840be2a6dcf28d75",
+      "size": 100,
       "isText": true
     },
     "docs/documentation-architecture.md": {
@@ -48,8 +53,8 @@
       "isText": true
     },
     "docs/index.html": {
-      "sha256": "102b63a7a4638d105d12dbc15038c088314deb5c460a298afc3f528ec2abcf35",
-      "size": 630,
+      "sha256": "f5d62c6ccae819cc7b2f1427dd185d20fe5e3bea26c244c58c06a3bbca6d316d",
+      "size": 689,
       "isText": true
     },
     "docs/index.md": {
@@ -65,6 +70,11 @@
     "docs/templates/decision-record-template.md": {
       "sha256": "15c1f6da542ea905251d7ac61d69eacbba4fae36d6e063cd0cf7d4f2eb7b9bde",
       "size": 2345,
+      "isText": true
+    },
+    "docs/templates/diagram-template.svg": {
+      "sha256": "e0f159ffe7a89759ad7b8f6f4ce5a8819453dbb085480b4ebaee8831fe286eba",
+      "size": 2418,
       "isText": true
     },
     "docs/templates/document-template.md": {

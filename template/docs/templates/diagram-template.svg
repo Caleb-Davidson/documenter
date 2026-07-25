@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="70" viewBox="0 0 600 70" role="img" aria-labelledby="diagram-title diagram-desc">
+  <title id="diagram-title">Replace with a one-line diagram title</title>
+  <desc id="diagram-desc">Replace with a short description of what the diagram shows.</desc>
+
+  <!--
+    documenter diagram theme.
+    Keep this <style> block and the marker as-is: the palette, fonts, stroke widths
+    and arrowhead are matched to the mermaid theme (see app.js diagramPalette /
+    mermaidThemeVariables), so referenced SVGs and mermaid diagrams look identical
+    in both light and dark mode. Edit the shapes below; don't edit the palette.
+    The docs shell wraps this in a figure-card frame, so the SVG stays transparent.
+    Reference from a page with:  ![Alt text](./assets/diagrams/your-diagram.svg)
+  -->
+  <style>
+    .node       { fill: #ffffff; stroke: #d8ddea; stroke-width: 1; }
+    .node-label { fill: #1f2937; font: 400 16px Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .edge       { stroke: #2563eb; stroke-width: 1; fill: none; }
+    .edge-arrow { fill: #2563eb; }
+    .edge-label { fill: #475569; font: 400 14px Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .node       { fill: #303b43; stroke: #5d6f7d; }
+      .node-label { fill: #eeeeee; }
+      .edge       { stroke: #31c4ca; }
+      .edge-arrow { fill: #31c4ca; }
+      .edge-label { fill: #dde3e7; }
+    }
+  </style>
+
+  <defs>
+    <marker id="diagram-arrow" viewBox="0 0 10 10" markerWidth="8" markerHeight="8"
+            refX="5" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path class="edge-arrow" d="M 0 0 L 10 5 L 0 10 z" />
+    </marker>
+  </defs>
+
+  <!-- Nodes: duplicate and reposition as needed. height="54" and rx="4" match the mermaid node scale. -->
+  <rect class="node" x="20" y="8" width="150" height="54" rx="4" />
+  <text class="node-label" x="95" y="40" text-anchor="middle">Input</text>
+
+  <rect class="node" x="430" y="8" width="150" height="54" rx="4" />
+  <text class="node-label" x="505" y="40" text-anchor="middle">Output</text>
+
+  <!-- Edges: end the path a few px short of the target node so the arrowhead sits on the border -->
+  <path class="edge" marker-end="url(#diagram-arrow)" d="M175 35 L423 35" />
+  <text class="edge-label" x="300" y="25" text-anchor="middle">transform</text>
+</svg>

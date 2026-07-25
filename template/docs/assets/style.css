@@ -111,6 +111,22 @@ svg {
   max-width: 100%;
 }
 
+/* Diagram frames: mermaid renders into <pre class="mermaid">, which already
+   gets the code-block card above. Referenced SVG diagrams render into
+   <p><img src="....svg">; give that paragraph the same figure-card frame
+   (identical tokens) so mermaid diagrams and SVG diagrams match. */
+.doc-content p:has(> img[src$=".svg" i]) {
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+}
+
+.doc-content p > img[src$=".svg" i] {
+  display: block;
+}
+
 .docs-shell {
   min-height: 100vh;
 }
