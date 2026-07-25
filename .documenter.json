@@ -1,0 +1,106 @@
+{
+  "documenterVersion": "0.1.0",
+  "lastSyncedAt": "2026-07-25T23:28:21.372Z",
+  "managedFiles": {
+    "docs/assets/app.js": {
+      "sha256": "a50919525f25b4f63e32fca2511ae9fb6f4a492ef3e9db4987bde709066cdb7d",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/style.css": {
+      "sha256": "e8643548088d3f81c36b7ebc5bad5a93e40b3519b93da836b23b992fa47cf5f1",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/vendor/js-yaml.min.js": {
+      "sha256": "0de3dec92d20eab9e0b46a5d928cd45ec025d73e348ddf458dbfb01da00cb473",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/vendor/markdown-it.min.js": {
+      "sha256": "c833317a56b17b17cc1910f3b7004447573487cd1fed4c1bcef90afbcbf5c234",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/vendor/mermaid.min.js": {
+      "sha256": "74d7c46dabca328c2294733910a8aa1ed0c37451776e8d5295da38a2b758fb9b",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/vendor/purify.min.js": {
+      "sha256": "10d5177ae761d2095c7f5225e46803471a46e52a51b238299722791490911eb4",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/assets/vendor/versions.json": {
+      "sha256": "1c9097e5a86d6d6853be4afea20db3624aaccad7b9f7d8fb840be2a6dcf28d75",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/documentation-architecture.md": {
+      "sha256": "edbef53e8a99a355b8fd3008d88a2059c073f9f335ed590ba191b70de54ed6df",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/documentation-md-contract.md": {
+      "sha256": "28460f4a326a325b5b02243b843b4e2e00b6faa22fce772b52318197bb39ef4c",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/documentation-style-guide.md": {
+      "sha256": "9cbcea1687784227d13d927390d5332ed80941107b984fd9a7f49a061ea8ead8",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/index.html": {
+      "sha256": "f5d62c6ccae819cc7b2f1427dd185d20fe5e3bea26c244c58c06a3bbca6d316d",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/index.md": {
+      "sha256": "98bc9412d0543143e93075a01ab548cf9ed3d22d2e8946f1f26bb7047692e6df",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/contract-template.md": {
+      "sha256": "bf2fecffe2a841e6f22e91280aaef5ea19de9c8e594679d2f2e6afd7fec8092e",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/decision-record-template.md": {
+      "sha256": "15c1f6da542ea905251d7ac61d69eacbba4fae36d6e063cd0cf7d4f2eb7b9bde",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/diagram-template.svg": {
+      "sha256": "e0f159ffe7a89759ad7b8f6f4ce5a8819453dbb085480b4ebaee8831fe286eba",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/document-template.md": {
+      "sha256": "78107fcc47fcd0d490aca86124ae89c13696dda1442e1afed53a7b73b7707ca5",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/product-requirements-document-template.md": {
+      "sha256": "ca318ea551e28d7038c91ef661685d08f1214996e52ca51034fd19e43c8e5351",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/standard-template.md": {
+      "sha256": "33796b09fe22473d683d79c3e7cdd7f75be7122d1b5b776268309df80381315c",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/system-architecture-template.md": {
+      "sha256": "f5bbfa6f48b4678c5ec2f0a0d8709fa2f7ca197f25cff0a622c9b8f2d85079f2",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    },
+    "docs/templates/technical-architecture-template.md": {
+      "sha256": "77f5120954404839d61e1f543bfb602e1f6b11d8770cedb5f4843eb8421af0a1",
+      "writtenBy": "0.1.0",
+      "writtenAt": "2026-07-25T23:28:21.372Z"
+    }
+  }
+}
