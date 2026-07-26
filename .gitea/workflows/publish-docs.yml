@@ -76,8 +76,8 @@ jobs:
           const pr = e.PR, marker = '<!-- docs-preview -->';
           const hasDocs = e.HAS_DOCS === '1';
           const body = hasDocs
-            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
-            : `${marker}\n**Docs**\n\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>No docs changes in this PR. Updated for \`${e.SHA}\`.</sub>`;
+            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
+            : `${marker}\n**Docs**\n\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>No docs changes in this PR. Updated for \`${e.SHA}\`.</sub>`;
           const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
           const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
           (async () => {
@@ -118,8 +118,8 @@ jobs:
           const [owner, repo] = e.REPO_FULL.split('/');
           const pr = e.PR, marker = '<!-- docs-preview -->';
           const body = e.STATE === 'live'
-            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
-            : `${marker}\n**Docs preview** — torn down (PR closed).\n\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/`;
+            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
+            : `${marker}\n**Docs preview** — torn down (PR closed).\n\n- main: ${e.DOCS_BASE}/${e.REPO}/`;
           const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
           const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
           (async () => {
