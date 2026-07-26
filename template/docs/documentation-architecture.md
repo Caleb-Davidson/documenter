@@ -1,6 +1,6 @@
 ---
 title: Documentation Architecture
-section: Documentation
+section: Reference
 description: Shared docs shell behavior, discovery, and document responsibilities.
 template: ./templates/system-architecture-template.md
 ---

@@ -1,6 +1,6 @@
 ---
 title: Documentation Markdown Contract
-section: Documentation
+section: Reference
 description: Author requirements for creating a new documentation page in Markdown.
 template: ./templates/contract-template.md
 ---
@@ -134,7 +134,7 @@ Intentionally empty: this contract does not currently define versioned compatibi
 ```text
 ---
 title: Example Standard
-section: Documentation
+section: Reference
 description: Contract-compliant example page.
 template: ./templates/standard-template.md
 ---

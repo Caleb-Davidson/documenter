@@ -1,10 +1,10 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-07-25T22:44:29.366Z",
+  "generatedAt": "2026-07-26T00:30:07.413Z",
   "files": {
     "docs/assets/app.js": {
-      "sha256": "a50919525f25b4f63e32fca2511ae9fb6f4a492ef3e9db4987bde709066cdb7d",
-      "size": 20452,
+      "sha256": "3bf60845390a1c507d33fce5b15946f49380d82a2dcfd6f87bc1f1dd45b05d32",
+      "size": 21143,
       "isText": true
     },
     "docs/assets/style.css": {
@@ -38,18 +38,18 @@
       "isText": true
     },
     "docs/documentation-architecture.md": {
-      "sha256": "edbef53e8a99a355b8fd3008d88a2059c073f9f335ed590ba191b70de54ed6df",
-      "size": 14254,
+      "sha256": "eff1e28a8d6a4cba7859eae99425875c91f0b02c32df1b5efe8fc386317b0707",
+      "size": 14250,
       "isText": true
     },
     "docs/documentation-md-contract.md": {
-      "sha256": "28460f4a326a325b5b02243b843b4e2e00b6faa22fce772b52318197bb39ef4c",
-      "size": 6071,
+      "sha256": "e2aaebb55a198a213a11f1fa487ef1638c87e083ff25ba747b99701955c85b8d",
+      "size": 6063,
       "isText": true
     },
     "docs/documentation-style-guide.md": {
-      "sha256": "9cbcea1687784227d13d927390d5332ed80941107b984fd9a7f49a061ea8ead8",
-      "size": 4181,
+      "sha256": "891561477c22161219d5f2b18ef4fd276c7aa2750b3b5b6e52b5276fbb7a7503",
+      "size": 4177,
       "isText": true
     },
     "docs/index.html": {

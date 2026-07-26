@@ -1,6 +1,6 @@
 ---
 title: Documentation Style Guide
-section: Documentation
+section: Reference
 description: Rules for writing and structuring project documentation in this repository.
 template: ./templates/standard-template.md
 ---

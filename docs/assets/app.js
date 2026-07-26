@@ -54,6 +54,7 @@ var markdown = window.markdownit ? window.markdownit({
 
     var navState = await resolveNavState(pagePath);
     var sectionLink = getSectionLink(navState.sections, pageSection);
+    var siteTitle = navState.siteTitle || "Documentation";
 
     ensureHeadingIds(content);
 
@@ -69,9 +70,9 @@ var markdown = window.markdownit ? window.markdownit({
       '<div class="docs-layout">' +
       '<aside class="sidebar">' +
       '<div class="sidebar-inner">' +
-      '<p class="sidebar-heading">Documentation</p>' +
+      '<p class="sidebar-heading">' + escapeHtml(siteTitle) + "</p>" +
       '<button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="docs-sidebar-nav">' +
-      '<span>Documentation</span>' +
+      "<span>" + escapeHtml(siteTitle) + "</span>" +
       '<span class="sidebar-toggle-icon" aria-hidden="true">' + chevronRightSvg() + "</span>" +
       "</button>" +
       '<nav class="sidebar-nav" id="docs-sidebar-nav" aria-label="Documentation navigation">' +
@@ -210,16 +211,17 @@ function normalizePageKey(value) {
 }
 
 async function resolveNavState(pagePath) {
-  var discoveredDocs = await discoverDocs();
+  var discovered = await discoverDocs();
   return {
-    sections: groupDocsBySection(discoveredDocs)
+    sections: groupDocsBySection(discovered.docs),
+    siteTitle: discovered.siteTitle || ""
   };
 }
 
 async function discoverDocs() {
   var isShell = document.body.dataset.shell === "true";
   if (!isShell) {
-    return discoverFromDirectoryListing();
+    return { docs: await discoverFromDirectoryListing(), siteTitle: "" };
   }
   return discoverFromIndexMd();
 }
@@ -255,9 +257,19 @@ async function discoverFromDirectoryListing() {
 async function discoverFromIndexMd() {
   try {
     var response = await fetch("index.md", { cache: "no-store" });
-    if (!response.ok) { return []; }
+    if (!response.ok) { return { docs: [], siteTitle: "" }; }
 
     var text = await response.text();
+
+    // The sidebar/site title is read from index.md frontmatter (a content file
+    // authors own) rather than hardcoded here, so it can be customized without
+    // editing this managed script and triggering drift detection.
+    var siteTitle = "";
+    var frontMatter = parseFrontMatterYaml(text);
+    if (frontMatter && frontMatter.data && typeof frontMatter.data.title === "string") {
+      siteTitle = frontMatter.data.title.trim();
+    }
+
     var mdLinkPattern = /\[([^\]]+)\]\(([^)]+\.md)\)/g;
     var seen = new Set();
     var paths = [];
@@ -272,9 +284,9 @@ async function discoverFromIndexMd() {
     }
 
     var docs = await Promise.all(paths.map(readDocMetadata));
-    return docs.filter(Boolean);
+    return { docs: docs.filter(Boolean), siteTitle: siteTitle };
   } catch (_error) {
-    return [];
+    return { docs: [], siteTitle: "" };
   }
 }
 
