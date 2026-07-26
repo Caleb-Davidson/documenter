@@ -2,7 +2,7 @@
 
 A CLI that scaffolds and maintains a repo-local markdown documentation system in any project. The system is template-driven, statically hostable, lintable, and AI-author friendly.
 
-documenter owns the heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`) and the lint logic. Target projects get just the docs content, the static shell, and a single `docs:lint` script — no transitive devDependencies to manage.
+documenter owns the heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`, `mermaid`) and the lint logic. Target projects get just the docs content, the static shell, and a single `docs:lint` script — no transitive devDependencies to manage.
 
 Each managed file is tracked by SHA-256 hash. `documenter update` detects whether a file in your project is unchanged from what we wrote (safe to update) or modified locally (preserved, with `--force` to override).
 
@@ -13,7 +13,7 @@ Hashing is **line-ending agnostic** for text files: CRLF/LF differences never re
 ```sh
 git clone <this-repo> ~/Projects/documenter
 cd ~/Projects/documenter
-npm install                              # gets js-yaml / markdown-it / dompurify for documenter itself
+npm install                              # gets js-yaml / markdown-it / dompurify / mermaid for documenter itself
 npm link                                 # exposes the `documenter` command globally
 ```
 
@@ -38,7 +38,7 @@ documenter lint                          # or: npm run docs:lint
 Creates:
 
 - `docs/` — `index.html` (the static shell), `index.md` (the navigation manifest), the three governing docs (`documentation-architecture.md`, `documentation-md-contract.md`, `documentation-style-guide.md`), and `templates/` (copyable starters).
-- `docs/assets/` — runtime JS, CSS, and vendored libraries (markdown-it / dompurify / js-yaml minified bundles).
+- `docs/assets/` — runtime JS, CSS, and vendored libraries (markdown-it / dompurify / js-yaml / mermaid minified bundles).
 - `.documenter.json` — state file recording the SHA-256 of every managed file at install time. Used by `update` for drift detection. Commit this.
 - `package.json` — adds `"docs:lint": "documenter lint"` if missing. No devDependencies merged.
 
@@ -114,7 +114,7 @@ my-project/
 │   ├── assets/
 │   │   ├── app.js
 │   │   ├── style.css
-│   │   └── vendor/{js-yaml,markdown-it,purify}.min.js + versions.json
+│   │   └── vendor/{js-yaml,markdown-it,purify,mermaid}.min.js + versions.json
 │   └── templates/
 │       ├── contract-template.md
 │       ├── decision-record-template.md
@@ -152,3 +152,5 @@ See the three governing docs inside your project:
 - `docs/documentation-architecture.md` — how the platform works.
 - `docs/documentation-md-contract.md` — required structure for new pages.
 - `docs/documentation-style-guide.md` — how to write well.
+
+Diagrams can be authored as Mermaid (preferred), a referenced SVG (`docs/assets/diagrams/*.svg`, copied from `docs/templates/diagram-template.svg`), or inline SVG (shell-only). The contract covers all three.

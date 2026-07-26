@@ -156,7 +156,8 @@ The documentation platform is authoritative for page loading, rendering, navigat
 **Important design notes:**
 
 - Rendering enhancement does not change markdown as source of truth.
-- Sanitization allows safe rich content, including expected SVG markup.
+- Sanitization allows safe rich content, including inline SVG markup.
+- Diagrams may be authored as Mermaid (preferred), a referenced SVG image, or inline SVG. Mermaid is rendered client-side after sanitization; inline SVG renders only in the shell, while Mermaid and referenced SVGs also render on Git hosts.
 
 ### Owned Data
 

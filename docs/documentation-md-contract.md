@@ -65,23 +65,40 @@ Rules:
 
 ## Allowed Patterns
 
-### Pattern: approved diagram wrapper
+### Pattern: diagrams
 
-**Use when:** Markdown cannot represent the required diagram clearly.
+**Use when:** A diagram communicates structure, flow, or sequence more clearly than prose or a table.
 
-**Contract:** Use approved wrapper/classes and inline SVG only.
+Three formats are supported. Prefer them in this order.
 
-```text
+**1. Mermaid (preferred).** A fenced `mermaid` code block — human-readable, diffable, and rendered both in the docs shell and natively on most Git hosts (GitHub, Gitea).
+
+~~~text
+```mermaid
+flowchart LR
+    A[Input] --> B[Output]
+```
+~~~
+
+**2. Referenced SVG.** A standalone `.svg` under `docs/assets/diagrams/`, linked as an image. Use it when you need manual layout that Mermaid's auto-layout cannot give; it also renders in the shell and on Git hosts. Copy `templates/diagram-template.svg` as a themed, dark-mode-aware starter.
+
+~~~text
+![Alt text](./assets/diagrams/your-diagram.svg)
+~~~
+
+**3. Inline SVG.** The `diagram-frame` wrapper. Still supported, but it renders **only in the docs shell** — most Git hosts strip inline SVG from the Markdown view — so reserve it for shell-only docs.
+
+~~~text
 <div class="diagram-frame">
   <svg ...>...</svg>
   <div class="diagram-caption">...</div>
 </div>
-```
+~~~
 
 **Notes:**
 
-- Allowed shared classes are `diagram-frame`, `diagram-node`, `diagram-arrow`, `diagram-label`, and `diagram-caption`.
-- Keep raw HTML limited to approved docs patterns.
+- Allowed inline-SVG shared classes are `diagram-frame`, `diagram-node`, `diagram-arrow`, `diagram-label`, and `diagram-caption`.
+- Keep raw HTML limited to the approved inline-SVG pattern; prefer Mermaid or a referenced SVG.
 
 ## Prohibited Patterns
 

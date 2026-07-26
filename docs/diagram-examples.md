@@ -13,13 +13,16 @@ correctly, both diagrams below appear as themed graphics in light and dark mode.
 
 ## Primary Section
 
-The shell supports two portable diagram formats. Prefer these over raw inline SVG,
-which the shell renders but most git hosts strip from the repo Markdown view.
+Three diagram formats are supported. **Mermaid is the preferred default** — it is
+human-readable and diffable, and both it and referenced SVGs render in the shell
+*and* natively on Git hosts. Inline SVG renders only in the shell.
 
-- **Mermaid** — a fenced `mermaid` code block. Lowest authoring effort; the shell
-  themes it to the docs palette, and git hosts render it natively.
+- **Mermaid (preferred)** — a fenced `mermaid` code block. Lowest authoring effort;
+  the shell themes it to the docs palette, and Git hosts render it natively.
 - **Referenced SVG** — a standalone `.svg` in `assets/diagrams/` linked as an
   image. Full manual layout control; travels with the file everywhere.
+- **Inline SVG** — the `diagram-frame` wrapper. Supported, but renders only in the
+  shell (Git hosts strip it).
 
 ## Structured Data
 

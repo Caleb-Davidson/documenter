@@ -92,6 +92,20 @@ Intentionally empty: {short reason}.
 - Keep the reason concrete and current-state based.
 - Remove the marker when meaningful content exists.
 
+### Pattern: choosing a diagram format
+
+**Use when:** A diagram communicates structure or flow better than prose or a table.
+
+**Pattern:**
+
+- Prefer a `mermaid` fenced code block. It is human-readable, diffable, and renders in the shell and natively on Git hosts.
+- Use a referenced SVG (`![Alt](./assets/diagrams/name.svg)`, from `templates/diagram-template.svg`) when you need manual layout Mermaid cannot give; it also renders in both places.
+- Use inline SVG (`diagram-frame` wrapper) only for shell-only docs — Git hosts strip it.
+
+**Notes:**
+
+- Full authoring rules for each format are in [Documentation Markdown Contract](./documentation-md-contract.md).
+
 ## Examples
 
 ### Strong example

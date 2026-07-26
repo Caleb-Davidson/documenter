@@ -2,13 +2,13 @@
 
 ## Project Description
 
-`documenter` is a CLI that scaffolds and maintains a repo-local markdown documentation system in any target project. End users run `documenter init` in their project to drop in a static-hostable docs shell (HTML + CSS + vendored JS), markdown templates, and a navigation manifest; later they run `documenter update` to refresh the platform files. The CLI uses SHA-256 hashes per managed file to distinguish stock files (safe to update) from user-modified ones (preserved by default). All heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`) live in documenter itself — target projects get vendored browser bundles and a single `docs:lint` script, no transitive devDependencies.
+`documenter` is a CLI that scaffolds and maintains a repo-local markdown documentation system in any target project. End users run `documenter init` in their project to drop in a static-hostable docs shell (HTML + CSS + vendored JS), markdown templates, and a navigation manifest; later they run `documenter update` to refresh the platform files. The CLI uses SHA-256 hashes per managed file to distinguish stock files (safe to update) from user-modified ones (preserved by default). All heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`, `mermaid`) live in documenter itself — target projects get vendored browser bundles and a single `docs:lint` script, no transitive devDependencies.
 
 ## Technologies Used
 
 - **Node.js 20+ (ESM)**: Runtime. `bin/`, `src/`, `lib/`, and `scripts/` are all ESM (`type: "module"`, `.mjs` files). Uses `util.parseArgs`, `fs/promises`, `crypto`, and `child_process` — all built-ins.
 - **`js-yaml` (devDep)**: Used by [lib/docs-lint.mjs](lib/docs-lint.mjs) to parse markdown frontmatter when linting target projects. Resolved from documenter's own `node_modules` even when the linter runs with `cwd=target`.
-- **`markdown-it`, `dompurify` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells.
+- **`markdown-it`, `dompurify`, `mermaid` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells. `mermaid` is the heavy one — its ~3.5 MB bundle renders diagrams client-side in the shell.
 - **Zero runtime dependencies**: The CLI itself imports only Node built-ins. Keep it that way (see Rules).
 
 ## Project Structure
@@ -21,16 +21,16 @@
 - `src/lib/manifest.mjs`: Manifest and state-file primitives — `hashBuffer()`, `hashFile()`, `isTextFile()`, `walkFiles()`, `buildManifest()`, `readManifest()`, `writeManifest()`, `readState()`, `writeState()`, `newState()`, `readCliVersion()`. `hashBuffer(buf, isText)` is the single line-ending-agnostic hasher both the record path (`buildManifest`) and the check path (`update`) route through; `hashFile(path, isText)` wraps it. Text files are hashed over LF-normalized content; binary files are hashed raw.
 - `src/lib/package-json.mjs`: `REQUIRED_SCRIPTS` (just `"docs:lint": "documenter lint"`), `mergeDocsScaffold()`, `minimalPackageJson()`. Additive merge — never overwrites existing keys in target package.json.
 - `lib/docs-lint.mjs`: The docs linter itself. Invoked via `child_process.spawn` with `cwd=target` by [src/commands/lint.mjs](src/commands/lint.mjs). Hardcodes `DOCS_DIR = "docs"` and walks relative paths, so it works against whatever cwd it's spawned in.
-- `scripts/sync-vendor.mjs`: Maintainer script. Copies `markdown-it.min.js`, `purify.min.js`, `js-yaml.min.js` from `node_modules/*/dist/` into `template/docs/assets/vendor/`, and writes `versions.json` alongside them.
+- `scripts/sync-vendor.mjs`: Maintainer script. Copies `markdown-it.min.js`, `purify.min.js`, `js-yaml.min.js`, `mermaid.min.js` from `node_modules/*/dist/` into `template/docs/assets/vendor/`, and writes `versions.json` alongside them.
 - `scripts/build-manifest.mjs`: Maintainer script. Walks `template/`, SHA-256 hashes every file, writes `template/manifest.json`.
 - `template/`: Source of truth for everything scaffolded into target projects. The whole tree is hashed by the manifest generator.
 - `template/manifest.json`: Generated. Maps every relative path under `template/` to `{ sha256, size, isText }`. `sha256`/`size` are over LF-normalized content for text files (so they're stable regardless of how the maintainer's checkout handles EOLs); `isText` is the text/binary decision, consumed by both `init` and `update` so neither re-sniffs. Read by `init` and `update` to decide what to copy and how to classify drift.
-- `template/docs/`: The docs shell (`index.html`, `assets/`), three governing docs, seven copyable page templates, and the navigation manifest (`index.md`).
+- `template/docs/`: The docs shell (`index.html`, `assets/`), three governing docs, seven copyable page templates plus a reusable `diagram-template.svg`, and the navigation manifest (`index.md`).
 
 ## Commands
 
 ```bash
-npm install               # Install devDeps (js-yaml, markdown-it, dompurify) for documenter
+npm install               # Install devDeps (js-yaml, markdown-it, dompurify, mermaid) for documenter
 npm link                  # Expose `documenter` globally for development on this machine
 npm unlink -g documenter  # Reverse the above
 
@@ -75,7 +75,7 @@ State semantics that matter:
 ## Rules
 
 - **After ANY change to `template/`, run `npm run manifest`.** A stale manifest causes `update` to mis-classify drift in user projects. There is no automatic regeneration — it's manual and load-bearing.
-- **After bumping `js-yaml`, `markdown-it`, or `dompurify` in `package.json`**: `npm install` → `npm run sync-vendor` → `npm run manifest`. Commit all three: updated `package-lock.json`, refreshed `template/docs/assets/vendor/*`, and the new `template/manifest.json`.
+- **After bumping `js-yaml`, `markdown-it`, `dompurify`, or `mermaid` in `package.json`**: `npm install` → `npm run sync-vendor` → `npm run manifest`. Commit all three: updated `package-lock.json`, refreshed `template/docs/assets/vendor/*`, and the new `template/manifest.json`.
 - **Keep zero runtime dependencies.** `bin/` and `src/` import only Node built-ins. Do not add a `dependencies` block to `package.json`. `devDependencies` are for tooling and vendored browser bundles only.
 - **Do not hand-edit `template/manifest.json`** — it's generated by `scripts/build-manifest.mjs`. Edit `template/` content, then regenerate.
 - **Do not hand-edit `.documenter.json` in target projects** — it's generated by `init` and `update`.
