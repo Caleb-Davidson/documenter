@@ -78,6 +78,7 @@ documenter lint
 |---|---|---|
 | `--cwd <path>` | all | Target a directory other than the current one. |
 | `--force` | `init`, `update` | Overwrite files that would normally be preserved. |
+| `--title <text>` | `init` | Set the docs site title (written to `docs/index.md` frontmatter `title`, shown as the sidebar heading). If omitted, defaults to "Project Documentation" and `init` reminds you to set it. |
 | `--help` / `-h` | top-level | Print help. |
 | `--version` / `-v` | top-level | Print CLI version. |
 

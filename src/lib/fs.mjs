@@ -36,6 +36,27 @@ export async function writeManagedFile(src, dest, { isText, eol }) {
 }
 
 /**
+ * Write generated/transformed text content to a managed target path.
+ *
+ * Mirrors {@link writeManagedFile}'s line-ending handling — normalizes to LF then
+ * re-emits with the requested `eol` — but takes an in-memory string instead of a
+ * source file. Use when a managed file is produced by transforming template
+ * content (e.g. injecting a title) rather than copied byte-for-byte.
+ *
+ * @param {string} dest Target destination path.
+ * @param {string} text Content to write.
+ * @param {object} opts
+ * @param {string} opts.eol Line ending to write ("\n" or "\r\n").
+ * @returns {Promise<void>}
+ */
+export async function writeManagedText(dest, text, { eol }) {
+  await mkdir(dirname(dest), { recursive: true });
+  const normalized = String(text).replace(/\r\n?/g, "\n");
+  const out = eol === "\r\n" ? normalized.replace(/\n/g, "\r\n") : normalized;
+  await writeFile(dest, out, "utf-8");
+}
+
+/**
  * Copy a directory tree from srcRoot into destRoot.
  *
  * @param {string} srcRoot Source directory.

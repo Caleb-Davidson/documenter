@@ -53,13 +53,15 @@ Commands:
   lint      Run the docs linter against docs/ in the current project.
 
 Options:
-  --cwd <path>   Target directory (default: process.cwd()).
-  --force        For init: overwrite existing files instead of skipping.
-  --help, -h     Print this help.
-  --version, -v  Print version.
+  --cwd <path>    Target directory (default: process.cwd()).
+  --force         For init/update: overwrite files instead of skipping.
+  --title <text>  For init: set the docs site title (docs/index.md 'title' → sidebar heading).
+  --help, -h      Print this help.
+  --version, -v   Print version.
 
 Examples:
   documenter init
+  documenter init --title "My Project Docs"
   documenter init --cwd ../my-project --force
   documenter update
   documenter lint
