@@ -3,12 +3,15 @@
   <desc id="diagram-desc">Replace with a short description of what the diagram shows.</desc>
 
   <!--
-    documenter diagram theme.
-    Keep this <style> block and the marker as-is: the palette, fonts, stroke widths
-    and arrowhead are matched to the mermaid theme (see app.js diagramPalette /
-    mermaidThemeVariables), so referenced SVGs and mermaid diagrams look identical
-    in both light and dark mode. Edit the shapes below; don't edit the palette.
-    The docs shell wraps this in a figure-card frame, so the SVG stays transparent.
+    documenter diagram theme — why this <style> block exists and must be kept:
+    this file is referenced as an <img>, so it CANNOT inherit the docs shell's
+    CSS. This block is the only styling it gets. It themes the diagram and makes
+    it adapt to light/dark (via prefers-color-scheme), both in the shell and on
+    Git hosts. The palette, fonts, stroke widths and arrowhead are matched to the
+    mermaid theme (see app.js diagramPalette / mermaidThemeVariables) so
+    referenced SVGs and mermaid diagrams look identical. Edit the shapes below;
+    do not edit or remove this block. The docs shell wraps this in a figure-card
+    frame, so the SVG background stays transparent.
     Reference from a page with:  ![Alt text](./assets/diagrams/your-diagram.svg)
   -->
   <style>

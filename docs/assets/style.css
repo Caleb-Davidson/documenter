@@ -442,28 +442,35 @@ tbody tr:last-child td {
 
 .diagram-frame svg {
   display: block;
-  width: 100%;
-  min-width: 720px;
+  max-width: 100%;
   height: auto;
 }
 
+/* Matched to the mermaid theme and the referenced-SVG template so inline SVG,
+   mermaid, and external SVG diagrams share one look. */
 .diagram-node {
   fill: var(--panel);
-  stroke: rgb(37 99 235 / 0.22);
-  stroke-width: 1.5;
+  stroke: var(--line-strong);
+  stroke-width: 1;
 }
 
 .diagram-arrow {
   fill: none;
-  stroke: rgb(100 116 139 / 0.9);
-  stroke-width: 2;
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+/* Arrowheads live in <marker> and can't inherit the edge stroke; theme their
+   fill here (CSS wins over the SVG fill attribute) so they match the edges. */
+.diagram-frame marker path {
+  fill: var(--accent);
 }
 
 .diagram-label {
   font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  fill: var(--text-soft);
+  font-size: 16px;
+  font-weight: 400;
+  fill: var(--text);
 }
 
 .diagram-caption {

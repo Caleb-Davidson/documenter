@@ -86,6 +86,8 @@ flowchart LR
 ![Alt text](./assets/diagrams/your-diagram.svg)
 ~~~
 
+Keep a referenced SVG **self-contained**: it loads as an `<img>`, so it cannot inherit the shell's CSS. Its internal `<style>` block — palette, fonts, and `prefers-color-scheme` dark-mode rules — is what makes it match the theme and adapt to light/dark, and it must stay in the file. Edit the shapes, not that block. This is also why the SVG renders correctly on Git hosts, which never run the shell's CSS.
+
 **3. Inline SVG.** The `diagram-frame` wrapper. Still supported, but it renders **only in the docs shell** — most Git hosts strip inline SVG from the Markdown view — so reserve it for shell-only docs.
 
 ~~~text

@@ -26,19 +26,19 @@ Put the most important system statement first.
 Use this pattern when Markdown alone cannot express the element.
 
 <div class="diagram-frame">
-  <svg viewBox="0 0 640 180" role="img" aria-labelledby="template-flow-title template-flow-desc">
+  <svg width="400" height="70" viewBox="0 0 400 70" role="img" aria-labelledby="template-flow-title template-flow-desc">
     <title id="template-flow-title">Template flow example</title>
     <desc id="template-flow-desc">A small example showing an input transformed into output.</desc>
     <defs>
-      <marker id="template-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
+      <marker id="template-arrow" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="5" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M 0 0 L 10 5 L 0 10 z" />
       </marker>
     </defs>
-    <rect class="diagram-node" x="40" y="54" width="220" height="72" rx="8" />
-    <text class="diagram-label" x="150" y="96" text-anchor="middle">Input</text>
-    <path class="diagram-arrow" marker-end="url(#template-arrow)" d="M 270 90 L 370 90" />
-    <rect class="diagram-node" x="380" y="54" width="220" height="72" rx="8" />
-    <text class="diagram-label" x="490" y="96" text-anchor="middle">Output</text>
+    <rect class="diagram-node" x="8" y="8" width="150" height="54" rx="4" />
+    <text class="diagram-label" x="83" y="40" text-anchor="middle">Input</text>
+    <rect class="diagram-node" x="242" y="8" width="150" height="54" rx="4" />
+    <text class="diagram-label" x="317" y="40" text-anchor="middle">Output</text>
+    <path class="diagram-arrow" marker-end="url(#template-arrow)" d="M158 35 L240 35" />
   </svg>
   <div class="diagram-caption">Use existing shared classes; avoid page-local CSS.</div>
 </div>

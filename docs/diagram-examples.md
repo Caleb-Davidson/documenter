@@ -49,21 +49,21 @@ match:
 And as inline SVG (`diagram-frame`), which renders in the shell only:
 
 <div class="diagram-frame">
-  <svg viewBox="0 0 640 120" role="img" aria-labelledby="inline-flow-title">
+  <svg width="546" height="70" viewBox="0 0 546 70" role="img" aria-labelledby="inline-flow-title">
     <title id="inline-flow-title">Markdown to docs shell to rendered page</title>
     <defs>
-      <marker id="inline-flow-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
+      <marker id="inline-flow-arrow" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="5" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M 0 0 L 10 5 L 0 10 z" />
       </marker>
     </defs>
-    <rect class="diagram-node" x="20" y="35" width="150" height="50" rx="8" />
-    <text class="diagram-label" x="95" y="65" text-anchor="middle">Markdown</text>
-    <rect class="diagram-node" x="245" y="35" width="150" height="50" rx="8" />
-    <text class="diagram-label" x="320" y="65" text-anchor="middle">Docs Shell</text>
-    <rect class="diagram-node" x="470" y="35" width="150" height="50" rx="8" />
-    <text class="diagram-label" x="545" y="65" text-anchor="middle">Rendered Page</text>
-    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M 170 60 L 240 60" />
-    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M 395 60 L 465 60" />
+    <rect class="diagram-node" x="8" y="8" width="126" height="54" rx="4" />
+    <text class="diagram-label" x="71" y="40" text-anchor="middle">Markdown</text>
+    <rect class="diagram-node" x="184" y="8" width="140" height="54" rx="4" />
+    <text class="diagram-label" x="254" y="40" text-anchor="middle">Docs Shell</text>
+    <rect class="diagram-node" x="374" y="8" width="164" height="54" rx="4" />
+    <text class="diagram-label" x="456" y="40" text-anchor="middle">Rendered Page</text>
+    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M134 35 L182 35" />
+    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M324 35 L372 35" />
   </svg>
   <div class="diagram-caption">Inline SVG renders in the shell but is stripped on Git hosts.</div>
 </div>

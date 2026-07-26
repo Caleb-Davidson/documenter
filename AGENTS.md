@@ -8,7 +8,7 @@
 
 - **Node.js 20+ (ESM)**: Runtime. `bin/`, `src/`, `lib/`, and `scripts/` are all ESM (`type: "module"`, `.mjs` files). Uses `util.parseArgs`, `fs/promises`, `crypto`, and `child_process` — all built-ins.
 - **`js-yaml` (devDep)**: Used by [lib/docs-lint.mjs](lib/docs-lint.mjs) to parse markdown frontmatter when linting target projects. Resolved from documenter's own `node_modules` even when the linter runs with `cwd=target`.
-- **`markdown-it`, `dompurify`, `mermaid` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells. `mermaid` is the heavy one — its ~3.5 MB bundle renders diagrams client-side in the shell.
+- **`markdown-it`, `dompurify`, `mermaid` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells.
 - **Zero runtime dependencies**: The CLI itself imports only Node built-ins. Keep it that way (see Rules).
 
 ## Project Structure
