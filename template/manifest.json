@@ -1,6 +1,6 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-07-26T01:39:05.639Z",
+  "generatedAt": "2026-07-26T01:41:31.248Z",
   "files": {
     "docs/assets/app.js": {
       "sha256": "2698426cdbf5cd51d945d62894889ff2da38ae96d9870486aaaa1156f87a71e1",
@@ -8,8 +8,8 @@
       "isText": true
     },
     "docs/assets/style.css": {
-      "sha256": "c0c2671d32140e461b797d1ba0325b8211c0f694a40093f95580da002ef2c9da",
-      "size": 10725,
+      "sha256": "ddc533eef6b32e335399862dd9ec66b067957fd4e1102949862ed9b33e9e4fb7",
+      "size": 10793,
       "isText": true
     },
     "docs/assets/vendor/js-yaml.min.js": {

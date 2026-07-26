@@ -14,6 +14,7 @@
   --accent: #2563eb;
   --accent-soft: #eff6ff;
   --accent-strong: #1d4ed8;
+  --diagram-edge: #2563eb;
   --success: #059669;
   --shadow: 0 18px 40px rgb(15 23 42 / 0.06);
   --radius: 14px;
@@ -37,6 +38,7 @@
     --accent: #00a1a8;
     --accent-soft: rgb(0 161 168 / 0.18);
     --accent-strong: #31c4ca;
+    --diagram-edge: #31c4ca;
     --shadow: 0 18px 40px rgb(7 10 14 / 0.5);
   }
 }
@@ -456,14 +458,14 @@ tbody tr:last-child td {
 
 .diagram-arrow {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--diagram-edge);
   stroke-width: 1;
 }
 
 /* Arrowheads live in <marker> and can't inherit the edge stroke; theme their
    fill here (CSS wins over the SVG fill attribute) so they match the edges. */
 .diagram-frame marker path {
-  fill: var(--accent);
+  fill: var(--diagram-edge);
 }
 
 .diagram-label {
