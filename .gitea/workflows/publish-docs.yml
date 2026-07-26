@@ -1,5 +1,42 @@
-name: Publish docs
+# Reusable docs publishing workflow for the internal docs-server.
+#
+# Drop this into any repo as `.gitea/workflows/publish-docs.yml`. It serves the
+# repo's documenter `docs/` shell from the shared docs-server:
+#
+#   * PROD — push to main (docs/** changed)   -> :8088/<repo>/
+#   * DEV  — EVERY PR gets one sticky comment with the docs link(s). If the PR
+#            changes docs/**, a per-PR PREVIEW is also published and linked:
+#                                               -> :8088/pr/<repo>/<PR#>/
+#            PRs that don't touch docs/ just get the prod (main) link, no preview.
+#
+# The sticky comment is updated in place (never spammed) and marked torn down when
+# the PR closes. Prod and preview live in sibling trees under the docs-server
+# `sites/` root, so republishing one never clobbers the other:
+#
+#   sites/<repo>/            <- prod
+#   sites/pr/<repo>/<PR#>/   <- per-PR preview   (a repo literally named "pr" would
+#                                                  collide; none do)
+#
+# "Did this PR change docs/?" is detected in-job via `git diff origin/<base>...HEAD`
+# (needs checkout fetch-depth: 0), which is why the pull_request trigger has NO top
+# level paths filter — the job runs on every PR and decides for itself.
+#
+# How the copy works: the job runs in the ci-node container, which has the host
+# Docker socket. It tars `docs/` over stdin into a throwaway `alpine` container that
+# bind-mounts the docs-server `sites` volume FROM THE HOST and unpacks it. No
+# gitea-runner config change and no host path mounted into the job container.
+#
+# The PR comment uses the INTERNAL http://gitea.example.com/api/v1 — the instance ROOT_URL
+# (http://ci-host) is not reliably resolvable from a job container (same
+# trap as the PR #5 checkout fix). The auto-injected ${{ secrets.GITEA_TOKEN }}
+# already has PR-comment write for same-repo PRs. The comment body is built inside
+# Node (from env vars) so there is no fragile multi-line shell string in the YAML.
+#
+# Requirements on the box (already set up): the docs-server stack, site root at
+# host path /srv/sites . See an internal doc and
+# an internal runbook in the internal KB.
 
+name: Publish docs
 on:
   push:
     branches: [main]
@@ -17,6 +54,7 @@ env:
   SITES: /srv/sites
 
 jobs:
+  # --- PROD: publish docs/ to sites/<repo>/ on merge to main -----------------
   prod:
     if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
@@ -32,6 +70,7 @@ jobs:
             alpine:3 sh -c "rm -rf \"/out/$REPO\" && mkdir -p \"/out/$REPO\" && tar -C \"/out/$REPO\" -xf -"
           echo "Done: $DOCS_BASE/$REPO/"
 
+  # --- DEV: on every PR, publish a preview if docs/ changed, then upsert a sticky comment ---
   preview:
     if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
     runs-on: ubuntu-latest
@@ -91,6 +130,7 @@ jobs:
           })().catch(err => { console.error(err); process.exit(1); });
           NODE
 
+  # --- CLEANUP: remove the preview + mark the comment when the PR closes ------
   cleanup:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
     runs-on: ubuntu-latest
@@ -110,16 +150,12 @@ jobs:
           REPO_FULL: ${{ github.repository }}
           REPO: ${{ github.event.repository.name }}
           PR: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.sha }}
-          STATE: closed
         run: |
           node - <<'NODE'
           const e = process.env;
           const [owner, repo] = e.REPO_FULL.split('/');
           const pr = e.PR, marker = '<!-- docs-preview -->';
-          const body = e.STATE === 'live'
-            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
-            : `${marker}\n**Docs preview** — torn down (PR closed).\n\n- main: ${e.DOCS_BASE}/${e.REPO}/`;
+          const body = `${marker}\n**Docs preview** — torn down (PR closed).\n\n- main: ${e.DOCS_BASE}/${e.REPO}/`;
           const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
           const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
           (async () => {
