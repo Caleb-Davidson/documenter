@@ -213,8 +213,32 @@ svg {
   margin-top: 1.5rem;
 }
 
-.doc-section-heading {
-  margin-bottom: 0.5rem;
+.doc-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.doc-section-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+  transition: transform 160ms ease;
+}
+
+.doc-section-toggle[aria-expanded="true"] .doc-section-icon {
+  transform: rotate(90deg);
+}
+
+.doc-section-toggle + .doc-nav {
+  margin-top: 0.5rem;
 }
 
 .doc-nav,

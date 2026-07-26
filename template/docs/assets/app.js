@@ -114,6 +114,7 @@ var markdown = window.markdownit ? window.markdownit({
     document.body.innerHTML = "";
     document.body.appendChild(shell);
     setupResponsiveSidebar(shell);
+    setupCollapsibleSections(shell);
     markCurrentNavLink(pagePath);
     renderMermaidDiagrams(content);
 
@@ -209,7 +210,7 @@ function renderNav(sections, pagePath) {
   }
 
   return sections
-    .map(function (section) {
+    .map(function (section, index) {
       var docs = (section.docs || [])
         .map(function (doc) {
           var docPath = normalizePath(doc.path);
@@ -218,14 +219,39 @@ function renderNav(sections, pagePath) {
         })
         .join("");
 
+      // Each section is a collapsible group: the heading is a toggle button that
+      // shows/hides its page list. All groups start collapsed (see the hidden
+      // attribute and aria-expanded="false"); setupCollapsibleSections wires the
+      // click handler after the shell mounts.
+      var navId = "doc-section-nav-" + index;
       return (
         '<section class="doc-section">' +
-        '<h2 class="doc-section-heading">' + escapeHtml(section.title) + "</h2>" +
-        '<ul class="doc-nav">' + docs + "</ul>" +
+        '<button class="doc-section-toggle" type="button" aria-expanded="false" aria-controls="' + navId + '">' +
+        '<span class="doc-section-heading">' + escapeHtml(section.title) + "</span>" +
+        '<span class="doc-section-icon" aria-hidden="true">' + chevronRightSvg() + "</span>" +
+        "</button>" +
+        '<ul class="doc-nav" id="' + navId + '" hidden>' + docs + "</ul>" +
         "</section>"
       );
     })
     .join("");
+}
+
+// Wire up the collapsible nav sections built by renderNav. Each toggle button
+// shows/hides its associated page list and flips aria-expanded (which the CSS
+// uses to rotate the chevron). Groups start collapsed; this only adds behavior.
+function setupCollapsibleSections(root) {
+  var toggles = root.querySelectorAll(".doc-section-toggle");
+  toggles.forEach(function (toggle) {
+    toggle.addEventListener("click", function () {
+      var expanded = toggle.getAttribute("aria-expanded") === "true";
+      var next = !expanded;
+      toggle.setAttribute("aria-expanded", String(next));
+      var listId = toggle.getAttribute("aria-controls");
+      var list = listId ? document.getElementById(listId) : null;
+      if (list) { list.hidden = !next; }
+    });
+  });
 }
 
 function renderToc(items, pagePath, isShell) {
@@ -694,7 +720,10 @@ function roundMermaidNodes(hosts) {
 }
 
 function parseFrontMatterYaml(mdText) {
-  var match = String(mdText).match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  // Tolerate CRLF: docs served from a Windows checkout carry \r\n line endings,
+  // so the fence delimiters arrive as "---\r\n". Matching only "---\n" would miss
+  // the frontmatter entirely and silently drop every title/section/description.
+  var match = String(mdText).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) {
     return { data: {}, content: mdText, error: null };
   }

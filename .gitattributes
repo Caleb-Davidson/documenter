@@ -1,0 +1,2 @@
+# Force LF in the working tree too, so local `core.autocrlf` can't diverge checkouts.
+* text=auto eol=lf

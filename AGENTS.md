@@ -84,6 +84,7 @@ State semantics that matter:
 - **`additive merge only` for target `package.json`.** [src/lib/package-json.mjs](src/lib/package-json.mjs) must never overwrite an existing script or dependency in a user's package.json.
 - **All template files are POSIX-normalized in the manifest** (forward slashes in keys). [src/lib/manifest.mjs](src/lib/manifest.mjs:101) handles this via `toPosix()`. Don't introduce platform-specific path keys.
 - **Hashing is line-ending agnostic for text files.** Both the record path (`buildManifest`) and the check path (`update`) must route through the one shared `hashBuffer()` helper so they can never diverge. Don't add a second hashing path or compare raw bytes for text — that reintroduces the Windows false-drift bug (CRLF on disk vs LF manifest). Binary files (per `isTextFile()`) are hashed raw — never normalize them.
+- **Dogfood after every change.** This repo is itself documenter-managed (it has its own `docs/` and `.documenter.json`). Whenever you finish implementing a change, run `documenter update` in the repo root to refresh the in-repo `docs/` with the latest platform files, then commit the refreshed `docs/` alongside your change. Never hand-copy `template/docs/` files into `docs/` — always go through the CLI so the drift model is exercised end-to-end. Files the repo has intentionally customized (e.g. `docs/index.md`) will show as `drifted` and be skipped — that's expected; don't `--force` them without reason.
 
 ## Agent Workflow
 
@@ -100,6 +101,7 @@ When making changes:
    rm -rf /tmp/docu-test && documenter init --cwd /tmp/docu-test && documenter lint --cwd /tmp/docu-test
    ```
 8. Update README.md when the drift model, command surface, or maintainer workflow changes.
+9. **Dogfood before reporting completion:** run `documenter update` in the repo root to refresh the in-repo `docs/` with your latest changes, and commit the refreshed `docs/` files. (See the dogfood rule above.)
 
 ## Notes for Future Agents
 
