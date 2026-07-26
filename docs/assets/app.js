@@ -120,15 +120,88 @@ var markdown = window.markdownit ? window.markdownit({
     if (isShell) {
       window.addEventListener("hashchange", function () {
         var nextRoute = parseShellHash(location.hash);
-        if (nextRoute.slug === pagePath) {
+        var nextSlug = nextRoute.slug || "index";
+        if (nextSlug === pagePath) {
           scrollToHashAnchor(nextRoute.anchor);
           return;
         }
-        location.reload();
+        pagePath = nextSlug;
+        renderShellPage(pagePath, nextRoute.anchor, navState);
       });
     }
   })();
 })();
+
+// Render a docs page into the already-built shell without a full reload: fetch and
+// parse the markdown, then update the content, breadcrumb, intro, TOC, page title,
+// active nav link and diagrams in place. Used for in-shell hash navigation.
+async function renderShellPage(pagePath, anchor, navState) {
+  var content = document.querySelector(".doc-content");
+  if (!content) { return; }
+
+  var pageTitle, pageDescription, pageSection;
+  var mdText = await loadMarkdownSource(pagePath + ".md");
+  if (!mdText) {
+    content.innerHTML = "<h2>Documentation</h2><p>Page not found: " + escapeHtml(pagePath + ".md") + "</p>";
+    pageTitle = "Documentation";
+    pageDescription = "";
+    pageSection = "Documentation";
+  } else {
+    var parsed = parseMdSource(mdText, true);
+    pageTitle = parsed.frontMatter.title || titleFromPath(pagePath + ".md");
+    pageDescription = parsed.frontMatter.description || "";
+    pageSection = parsed.frontMatter.section || "Documentation";
+    content.innerHTML = parsed.html;
+  }
+
+  document.title = pageTitle + " | Documentation";
+  ensureHeadingIds(content);
+
+  var sectionLink = getSectionLink(navState.sections, pageSection);
+  var crumbs = document.querySelector(".breadcrumbs");
+  if (crumbs) {
+    crumbs.innerHTML =
+      '<a href="./index.html">Overview</a>' +
+      '<span class="breadcrumb-separator" aria-hidden="true">' + chevronRightSvg() + "</span>" +
+      '<a href="' + sectionLink + '">' + escapeHtml(pageSection) + "</a>" +
+      '<span class="breadcrumb-separator" aria-hidden="true">' + chevronRightSvg() + "</span>" +
+      '<span class="breadcrumb-current">' + escapeHtml(pageTitle) + "</span>";
+  }
+
+  var intro = document.querySelector(".page-intro");
+  if (intro) {
+    intro.innerHTML = "<h1>" + escapeHtml(pageTitle) + "</h1>" +
+      (pageDescription ? '<p class="lede">' + escapeHtml(pageDescription) + "</p>" : "");
+  }
+
+  var tocCard = document.querySelector(".toc-card");
+  if (tocCard) {
+    tocCard.innerHTML = '<p class="toc-heading">On This Page</p>' +
+      renderToc(collectHeadings(content), pagePath, true);
+  }
+
+  markCurrentNavLink(pagePath);
+  renderMermaidDiagrams(content);
+  collapseSidebarOnMobile();
+
+  if (anchor) {
+    scrollToHashAnchor(anchor);
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+
+// On mobile the sidebar is a collapsible overlay; close it after navigating so the
+// freshly loaded page isn't hidden behind it. No-op on desktop (toggle is hidden).
+function collapseSidebarOnMobile() {
+  var toggle = document.querySelector(".sidebar-toggle");
+  var nav = document.querySelector(".sidebar-nav");
+  if (!toggle || !nav || toggle.hidden) { return; }
+  toggle.setAttribute("aria-expanded", "false");
+  nav.hidden = true;
+  var footer = document.querySelector(".sidebar-footer");
+  if (footer) { footer.hidden = true; }
+}
 
 function renderNav(sections, pagePath) {
   if (!sections.length) {
@@ -375,11 +448,10 @@ function titleFromPath(path) {
 }
 
 function markCurrentNavLink(pagePath) {
+  var key = normalizePageKey(pagePath);
   document.querySelectorAll(".doc-nav a").forEach(function (link) {
     var href = normalizePageKey(link.getAttribute("href") || "");
-    if (href === normalizePageKey(pagePath)) {
-      link.classList.add("is-active");
-    }
+    link.classList.toggle("is-active", href === key);
   });
 }
 
@@ -524,20 +596,28 @@ function renderMermaidDiagrams(root) {
   });
 
   runMermaid(hosts);
+  ensureMermaidThemeListener();
+}
 
-  // The shell themes itself from prefers-color-scheme via CSS variables; keep the
-  // diagrams in sync by re-rendering them with the matching mermaid theme.
+// Re-render mermaid diagrams when the OS theme flips. Registered once (not per
+// call) so repeated in-place navigations don't stack listeners; it re-queries the
+// diagrams currently in the DOM rather than closing over a stale host list.
+var mermaidThemeListenerAdded = false;
+function ensureMermaidThemeListener() {
+  if (mermaidThemeListenerAdded) { return; }
   var darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  if (darkQuery.addEventListener) {
-    darkQuery.addEventListener("change", function () {
-      hosts.forEach(function (host) {
-        host.removeAttribute("data-processed");
-        host.innerHTML = "";
-        host.textContent = host.dataset.mermaidSource || "";
-      });
-      runMermaid(hosts);
+  if (!darkQuery.addEventListener) { return; }
+  mermaidThemeListenerAdded = true;
+  darkQuery.addEventListener("change", function () {
+    var hosts = Array.prototype.slice.call(document.querySelectorAll("pre.mermaid"));
+    if (!hosts.length) { return; }
+    hosts.forEach(function (host) {
+      host.removeAttribute("data-processed");
+      host.innerHTML = "";
+      host.textContent = host.dataset.mermaidSource || "";
     });
-  }
+    runMermaid(hosts);
+  });
 }
 
 // Shared diagram palette, sourced from the docs-shell CSS tokens in style.css so

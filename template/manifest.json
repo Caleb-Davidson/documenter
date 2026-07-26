@@ -1,10 +1,10 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-07-26T00:30:07.413Z",
+  "generatedAt": "2026-07-26T00:43:44.800Z",
   "files": {
     "docs/assets/app.js": {
-      "sha256": "3bf60845390a1c507d33fce5b15946f49380d82a2dcfd6f87bc1f1dd45b05d32",
-      "size": 21143,
+      "sha256": "2698426cdbf5cd51d945d62894889ff2da38ae96d9870486aaaa1156f87a71e1",
+      "size": 24459,
       "isText": true
     },
     "docs/assets/style.css": {
