@@ -6,7 +6,6 @@ on:
     paths: ["docs/**"]
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    paths: ["docs/**"]
   workflow_dispatch: {}
 
 concurrency:
@@ -38,16 +37,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Publish PR preview docs
+        with:
+          fetch-depth: 0
+      - name: Publish PR preview docs when docs/ changed
         run: |
           set -euo pipefail
           REPO="${{ github.event.repository.name }}"
           PR="${{ github.event.pull_request.number }}"
-          if [ ! -d docs ]; then echo "No docs/ — nothing to preview."; exit 0; fi
-          echo "Publishing preview for '$REPO' PR #$PR..."
-          tar -C docs -cf - . | docker run --rm -i -v "$SITES":/out \
-            alpine:3 sh -c "rm -rf \"/out/pr/$REPO/$PR\" && mkdir -p \"/out/pr/$REPO/$PR\" && tar -C \"/out/pr/$REPO/$PR\" -xf -"
-          echo "Done: $DOCS_BASE/pr/$REPO/$PR/"
+          BASE="${{ github.base_ref }}"
+          git fetch -q origin "$BASE" 2>/dev/null || true
+          if git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
+            CHANGED="$(git diff --name-only "origin/$BASE...HEAD" -- docs 2>/dev/null || true)"
+          else
+            CHANGED="$(git diff --name-only HEAD~1 HEAD -- docs 2>/dev/null || true)"
+          fi
+          if [ -n "$CHANGED" ] && [ -d docs ]; then
+            echo "HAS_DOCS=1" >> "$GITHUB_ENV"
+            echo "docs/ changed — publishing preview for '$REPO' PR #$PR..."
+            tar -C docs -cf - . | docker run --rm -i -v "$SITES":/out \
+              alpine:3 sh -c "rm -rf \"/out/pr/$REPO/$PR\" && mkdir -p \"/out/pr/$REPO/$PR\" && tar -C \"/out/pr/$REPO/$PR\" -xf -"
+            echo "Done: $DOCS_BASE/pr/$REPO/$PR/"
+          else
+            echo "HAS_DOCS=0" >> "$GITHUB_ENV"
+            echo "No docs/ changes in this PR — will post the prod link only."
+          fi
       - name: Upsert sticky PR comment
         env:
           GITEA_API: http://gitea.example.com/api/v1
@@ -56,21 +69,20 @@ jobs:
           REPO: ${{ github.event.repository.name }}
           PR: ${{ github.event.pull_request.number }}
           SHA: ${{ github.sha }}
-          STATE: live
         run: |
           node - <<'NODE'
           const e = process.env;
           const [owner, repo] = e.REPO_FULL.split('/');
           const pr = e.PR, marker = '<!-- docs-preview -->';
-          const body = e.STATE === 'live'
+          const hasDocs = e.HAS_DOCS === '1';
+          const body = hasDocs
             ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
-            : `${marker}\n**Docs preview** — torn down (PR closed).\n\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/`;
+            : `${marker}\n**Docs**\n\n- Prod (main): ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>No docs changes in this PR. Updated for \`${e.SHA}\`.</sub>`;
           const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
           const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
           (async () => {
             const list = await fetch(`${base}/issues/${pr}/comments`, { headers: h }).then(r => r.json());
             const mine = Array.isArray(list) ? list.find(c => c.body && c.body.includes(marker)) : null;
-            if (e.STATE !== 'live' && !mine) { console.log('no sticky comment to update'); return; }
             const res = mine
               ? await fetch(`${base}/issues/comments/${mine.id}`, { method: 'PATCH', headers: h, body: JSON.stringify({ body }) })
               : await fetch(`${base}/issues/${pr}/comments`, { method: 'POST', headers: h, body: JSON.stringify({ body }) });
