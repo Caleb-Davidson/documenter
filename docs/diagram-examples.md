@@ -9,7 +9,7 @@ template: ./templates/document-template.md
 
 Show the diagram formats the docs shell can render, so authors can pick one and
 copy a working sample. This page doubles as a visual test: if the shell renders
-correctly, both diagrams below appear as themed graphics in light and dark mode.
+correctly, all three diagrams below appear as themed graphics in light and dark mode.
 
 ## Primary Section
 
@@ -45,6 +45,28 @@ And as a referenced SVG, copied from `templates/diagram-template.svg` and themed
 match:
 
 ![Markdown to docs shell to rendered page](./assets/diagrams/pipeline.svg)
+
+And as inline SVG (`diagram-frame`), which renders in the shell only:
+
+<div class="diagram-frame">
+  <svg viewBox="0 0 640 120" role="img" aria-labelledby="inline-flow-title">
+    <title id="inline-flow-title">Markdown to docs shell to rendered page</title>
+    <defs>
+      <marker id="inline-flow-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
+      </marker>
+    </defs>
+    <rect class="diagram-node" x="20" y="35" width="150" height="50" rx="8" />
+    <text class="diagram-label" x="95" y="65" text-anchor="middle">Markdown</text>
+    <rect class="diagram-node" x="245" y="35" width="150" height="50" rx="8" />
+    <text class="diagram-label" x="320" y="65" text-anchor="middle">Docs Shell</text>
+    <rect class="diagram-node" x="470" y="35" width="150" height="50" rx="8" />
+    <text class="diagram-label" x="545" y="65" text-anchor="middle">Rendered Page</text>
+    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M 170 60 L 240 60" />
+    <path class="diagram-arrow" marker-end="url(#inline-flow-arrow)" d="M 395 60 L 465 60" />
+  </svg>
+  <div class="diagram-caption">Inline SVG renders in the shell but is stripped on Git hosts.</div>
+</div>
 
 ## Notes
 

@@ -11,29 +11,13 @@ The documentation system provides a repo-local docs experience that works in sta
 
 At runtime, a shared shell loads markdown pages, reads frontmatter metadata, renders content safely, and builds consistent navigation and page chrome.
 
-<div class="diagram-frame">
-  <svg viewBox="0 0 960 260" role="img" aria-labelledby="docs-arch-overview-title docs-arch-overview-desc">
-    <title id="docs-arch-overview-title">Documentation system overview</title>
-    <desc id="docs-arch-overview-desc">A high-level flow from markdown sources and manifest through the docs shell to a rendered static page.</desc>
-    <defs>
-      <marker id="docs-arch-overview-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
-      </marker>
-    </defs>
-    <rect class="diagram-node" x="40" y="82" width="240" height="96" rx="8" />
-    <text class="diagram-label" x="160" y="118" text-anchor="middle">Markdown Docs</text>
-    <text class="diagram-label" x="160" y="144" text-anchor="middle">+ docs/index.md</text>
-    <rect class="diagram-node" x="360" y="70" width="240" height="120" rx="8" />
-    <text class="diagram-label" x="480" y="116" text-anchor="middle">Shared Docs Shell</text>
-    <text class="diagram-label" x="480" y="142" text-anchor="middle">Parse + Render + Nav</text>
-    <rect class="diagram-node" x="680" y="82" width="240" height="96" rx="8" />
-    <text class="diagram-label" x="800" y="118" text-anchor="middle">Rendered Static</text>
-    <text class="diagram-label" x="800" y="144" text-anchor="middle">Documentation Page</text>
-    <path class="diagram-arrow" marker-end="url(#docs-arch-overview-arrow)" d="M 290 130 L 350 130" />
-    <path class="diagram-arrow" marker-end="url(#docs-arch-overview-arrow)" d="M 610 130 L 670 130" />
-  </svg>
-  <div class="diagram-caption">High-level context for the documentation platform.</div>
-</div>
+```mermaid
+flowchart LR
+    M[Markdown Docs + index.md] --> S[Shared Docs Shell: Parse, Render, Nav]
+    S --> R[Rendered Static Page]
+```
+
+*High-level context for the documentation platform.*
 
 ## Goals
 
@@ -113,32 +97,16 @@ At runtime, a shared shell loads markdown pages, reads frontmatter metadata, ren
 
 The documentation platform is authoritative for page loading, rendering, navigation assembly, and table-of-contents generation.
 
-<div class="diagram-frame">
-  <svg viewBox="0 0 960 280" role="img" aria-labelledby="docs-process-title docs-process-desc">
-    <title id="docs-process-title">Documentation shell process flow</title>
-    <desc id="docs-process-desc">A high-level process from page request through parsing, rendering, and shell enhancement.</desc>
-    <defs>
-      <marker id="docs-process-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
-      </marker>
-    </defs>
-    <rect class="diagram-node" x="40" y="106" width="170" height="68" rx="8" />
-    <text class="diagram-label" x="125" y="146" text-anchor="middle">Page Request</text>
-    <rect class="diagram-node" x="280" y="56" width="190" height="68" rx="8" />
-    <text class="diagram-label" x="375" y="96" text-anchor="middle">Load Markdown</text>
-    <rect class="diagram-node" x="280" y="156" width="190" height="68" rx="8" />
-    <text class="diagram-label" x="375" y="196" text-anchor="middle">Parse Metadata</text>
-    <rect class="diagram-node" x="540" y="106" width="170" height="68" rx="8" />
-    <text class="diagram-label" x="625" y="146" text-anchor="middle">Render + Sanitize</text>
-    <rect class="diagram-node" x="780" y="106" width="140" height="68" rx="8" />
-    <text class="diagram-label" x="850" y="146" text-anchor="middle">Enhance UI</text>
-    <path class="diagram-arrow" marker-end="url(#docs-process-arrow)" d="M 220 140 L 270 140" />
-    <path class="diagram-arrow" marker-end="url(#docs-process-arrow)" d="M 470 90 L 530 126" />
-    <path class="diagram-arrow" marker-end="url(#docs-process-arrow)" d="M 470 190 L 530 154" />
-    <path class="diagram-arrow" marker-end="url(#docs-process-arrow)" d="M 720 140 L 770 140" />
-  </svg>
-  <div class="diagram-caption">Owned runtime workflow for docs shell page rendering.</div>
-</div>
+```mermaid
+flowchart LR
+    PR[Page Request] --> LM[Load Markdown]
+    PR --> PM[Parse Metadata]
+    LM --> RS[Render + Sanitize]
+    PM --> RS
+    RS --> UI[Enhance UI]
+```
+
+*Owned runtime workflow for docs shell page rendering.*
 
 ### Process: Shell-mode page rendering
 
@@ -173,26 +141,12 @@ The documentation platform owns the meaning and usage rules for manifest links a
 
 Meaningful data movement centers on markdown content, frontmatter metadata, and manifest links flowing into rendered shell UI.
 
-<div class="diagram-frame">
-  <svg viewBox="0 0 960 240" role="img" aria-labelledby="docs-data-flow-title docs-data-flow-desc">
-    <title id="docs-data-flow-title">Documentation data flow</title>
-    <desc id="docs-data-flow-desc">Data moves from markdown and manifest through parse and render steps into navigation and page output.</desc>
-    <defs>
-      <marker id="docs-data-flow-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
-      </marker>
-    </defs>
-    <rect class="diagram-node" x="40" y="84" width="240" height="72" rx="8" />
-    <text class="diagram-label" x="160" y="126" text-anchor="middle">Markdown + Manifest</text>
-    <rect class="diagram-node" x="360" y="84" width="240" height="72" rx="8" />
-    <text class="diagram-label" x="480" y="126" text-anchor="middle">Parse + Transform</text>
-    <rect class="diagram-node" x="680" y="84" width="240" height="72" rx="8" />
-    <text class="diagram-label" x="800" y="126" text-anchor="middle">UI State + Rendered Page</text>
-    <path class="diagram-arrow" marker-end="url(#docs-data-flow-arrow)" d="M 290 120 L 350 120" />
-    <path class="diagram-arrow" marker-end="url(#docs-data-flow-arrow)" d="M 610 120 L 670 120" />
-  </svg>
-  <div class="diagram-caption">Data flow from repo source to rendered docs shell output.</div>
-</div>
+```mermaid
+flowchart LR
+    A[Markdown + Manifest] --> B[Parse + Transform] --> C[UI State + Rendered Page]
+```
+
+*Data flow from repo source to rendered docs shell output.*
 
 ### Flow: Loading a shell-mode documentation page
 

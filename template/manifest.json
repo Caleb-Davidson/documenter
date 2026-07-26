@@ -1,6 +1,6 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-07-26T00:59:22.789Z",
+  "generatedAt": "2026-07-26T01:30:12.867Z",
   "files": {
     "docs/assets/app.js": {
       "sha256": "2698426cdbf5cd51d945d62894889ff2da38ae96d9870486aaaa1156f87a71e1",
@@ -38,8 +38,8 @@
       "isText": true
     },
     "docs/documentation-architecture.md": {
-      "sha256": "ffff487dd6a5010ad76b31d1468bb8ceb7343d5dd434aae74a5100953ac06b2c",
-      "size": 14488,
+      "sha256": "eadc43ed43340ea8283cee6f41c50bbea2235fb6a3cbcff69aecd9c5ff1a0def",
+      "size": 10092,
       "isText": true
     },
     "docs/documentation-md-contract.md": {
@@ -83,8 +83,8 @@
       "isText": true
     },
     "docs/templates/product-requirements-document-template.md": {
-      "sha256": "ca318ea551e28d7038c91ef661685d08f1214996e52ca51034fd19e43c8e5351",
-      "size": 6135,
+      "sha256": "4effdade6cfa2c8ddbe6e1acb3331b3ed9b56a64ce6b62a8ccf583df15a6d70e",
+      "size": 4936,
       "isText": true
     },
     "docs/templates/standard-template.md": {

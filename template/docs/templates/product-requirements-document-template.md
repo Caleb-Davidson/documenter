@@ -59,26 +59,12 @@ Describe the intended solution at a product level.
 
 This section should explain what the user experiences and what the system provides. Avoid implementation details unless they constrain the user experience or requirements.
 
-<div class="diagram-frame">
-  <svg viewBox="0 0 960 260" role="img" aria-labelledby="prd-solution-title prd-solution-desc">
-    <title id="prd-solution-title">Proposed solution overview</title>
-    <desc id="prd-solution-desc">A high-level product flow showing user action, system response, and resulting value.</desc>
-    <defs>
-      <marker id="prd-solution-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-        <path d="M 0 0 L 10 4 L 0 8 z" fill="rgba(100, 116, 139, 0.9)" />
-      </marker>
-    </defs>
-    <rect class="diagram-node" x="40" y="92" width="220" height="76" rx="8" />
-    <text class="diagram-label" x="150" y="138" text-anchor="middle">User Need</text>
-    <rect class="diagram-node" x="370" y="92" width="220" height="76" rx="8" />
-    <text class="diagram-label" x="480" y="138" text-anchor="middle">Product Behavior</text>
-    <rect class="diagram-node" x="700" y="92" width="220" height="76" rx="8" />
-    <text class="diagram-label" x="810" y="138" text-anchor="middle">User Value</text>
-    <path class="diagram-arrow" marker-end="url(#prd-solution-arrow)" d="M 270 130 L 360 130" />
-    <path class="diagram-arrow" marker-end="url(#prd-solution-arrow)" d="M 600 130 L 690 130" />
-  </svg>
-  <div class="diagram-caption">Replace with the real product or workflow overview when a diagram improves clarity.</div>
-</div>
+```mermaid
+flowchart LR
+    N[User Need] --> B[Product Behavior] --> V[User Value]
+```
+
+*Replace with the real product or workflow overview when a diagram improves clarity.*
 
 ## User Experience
 
