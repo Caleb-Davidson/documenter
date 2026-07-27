@@ -1,0 +1,51 @@
+# When a PR closes: remove its docs preview and mark the sticky comment torn down.
+# Triggering only on `closed` keeps this off the check list while the PR is open.
+
+name: docs
+on:
+  pull_request:
+    types: [closed]
+
+concurrency:
+  group: docs-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  DOCS_BASE: http://docs.example.com
+  SITES: /srv/sites
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove PR preview
+        run: |
+          set -euo pipefail
+          REPO="${{ github.event.repository.name }}"
+          PR="${{ github.event.pull_request.number }}"
+          docker run --rm -v "$SITES":/out alpine:3 sh -c \
+            "rm -rf \"/out/pr/$REPO/$PR\"; rmdir --ignore-fail-on-non-empty \"/out/pr/$REPO\" 2>/dev/null || true"
+          echo "Removed preview for '$REPO' PR #$PR."
+      - name: Mark comment torn down
+        env:
+          GITEA_API: http://gitea.example.com/api/v1
+          TOKEN: ${{ secrets.GITEA_TOKEN }}
+          REPO_FULL: ${{ github.repository }}
+          REPO: ${{ github.event.repository.name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          node - <<'NODE'
+          const e = process.env;
+          const [owner, repo] = e.REPO_FULL.split('/');
+          const pr = e.PR, marker = '<!-- docs-preview -->';
+          const body = `${marker}\n**Docs preview** — torn down (PR closed).\n\n- main: ${e.DOCS_BASE}/${e.REPO}/`;
+          const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
+          const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
+          (async () => {
+            const list = await fetch(`${base}/issues/${pr}/comments`, { headers: h }).then(r => r.json());
+            const mine = Array.isArray(list) ? list.find(c => c.body && c.body.includes(marker)) : null;
+            if (!mine) { console.log('no sticky comment to update'); return; }
+            const res = await fetch(`${base}/issues/comments/${mine.id}`, { method: 'PATCH', headers: h, body: JSON.stringify({ body }) });
+            console.log(`patched teardown -> ${res.status}`);
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
