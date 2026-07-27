@@ -1,6 +1,6 @@
 {
   "documenterVersion": "0.1.0",
-  "generatedAt": "2026-07-26T05:44:39.605Z",
+  "generatedAt": "2026-07-27T04:11:33.060Z",
   "files": {
     "docs/assets/app.js": {
       "sha256": "6b5959439e3f9bca0534ac2828f8d5b40a0916bd8d8105ad74c08cc93e28d5be",
@@ -43,8 +43,8 @@
       "isText": true
     },
     "docs/documentation-md-contract.md": {
-      "sha256": "1c46fbc59e8830317f289474a001338357bbc63ad19b812e639206016aa1ccf6",
-      "size": 7340,
+      "sha256": "b915b43632d452cca9255f1aa4fe0a4a535913314a02399d6a1335f9ad7b82d1",
+      "size": 7699,
       "isText": true
     },
     "docs/documentation-style-guide.md": {

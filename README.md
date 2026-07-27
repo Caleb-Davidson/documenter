@@ -72,6 +72,8 @@ Runs the documenter-internal docs linter against `docs/` in the current project.
 documenter lint
 ```
 
+It checks required frontmatter, template-section parity, heading structure, `index.md` sync, HTML policy, and links. For links, it enforces the `./` docs-root-relative convention and verifies each internal target exists — a link to a missing `.md` page or referenced SVG fails lint, reported with the linking file, line, link text, and target. Anchor fragments (`./page.md#section`) are resolved to the file only; the `#section` is not checked. Any violation is a hard error and exits non-zero.
+
 ### Options
 
 | Option | Applies to | Description |

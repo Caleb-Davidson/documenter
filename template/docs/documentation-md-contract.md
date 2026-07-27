@@ -29,7 +29,7 @@ It exists so shell rendering, navigation, and lint behavior remain deterministic
 |---|---|
 | Frontmatter | Docs pages must include `title`, `section`, `description`, and `template` when required. |
 | Body structure | Body headings start at H2, and only H2/H3 are allowed in body content. |
-| Linking/discovery | Docs use relative `.md` links and shell-visible docs must be listed in `docs/index.md`. |
+| Linking/discovery | Docs use relative `./` links that must resolve to an existing file, and shell-visible docs must be listed in `docs/index.md`. |
 
 ## Required Structure
 
@@ -108,6 +108,7 @@ Keep a referenced SVG **self-contained**: it loads as an `<img>`, so it cannot i
 |---|---|
 | Body H1 headings | Conflicts with shell title rendering from frontmatter |
 | Hash-route links in markdown | Breaks docs-link normalization rules; use relative `.md` links |
+| Links to nonexistent docs files | Signals a stale reference left behind by a rename or delete; breaks navigation |
 | Raw `&lt;script&gt;` and unapproved HTML tags/classes | Violates docs safety and shared rendering constraints |
 
 ## Processing Behavior
@@ -129,6 +130,7 @@ Keep a referenced SVG **self-contained**: it loads as an `<img>`, so it cannot i
 | Required frontmatter fields and frontmatter constraints | `npm run docs:lint` | Command exits non-zero with field-specific errors |
 | Template declaration and exact H2 template sequence | `npm run docs:lint` | Command exits non-zero with expected vs actual heading sequence |
 | Index/doc sync, link policy, and HTML policy | `npm run docs:lint` | Command exits non-zero with line-level violations |
+| Internal link targets resolve to an existing file | `npm run docs:lint` | Command exits non-zero naming the linking file, line, link text, and missing target (the `#anchor` fragment is not validated) |
 
 ## Compatibility Rules
 

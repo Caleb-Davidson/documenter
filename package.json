@@ -18,6 +18,7 @@
   "scripts": {
     "sync-vendor": "node scripts/sync-vendor.mjs",
     "manifest": "node scripts/build-manifest.mjs",
+    "test": "node --test",
     "docs:lint": "documenter lint"
   },
   "devDependencies": {
