@@ -1,6 +1,7 @@
-# On every open PR: publish a docs preview to :8088/pr/<repo>/<PR#>/ when docs/
-# changed, then upsert one sticky comment linking it (and always the main docs).
-# Preview lives under sites/pr/, a sibling of prod, so neither clobbers the other.
+# Thin caller: on an open PR, delegate the docs preview to the central reusable
+# workflow. Triggers only on pull_request open/sync/reopen, so only this check
+# shows on an open PR (publish and cleanup stay off the list). The docs-server
+# host and paths live in mathroze/workflows, not here.
 
 name: docs
 on:
@@ -11,67 +12,9 @@ concurrency:
   group: docs-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-env:
-  DOCS_BASE: http://docs.example.com
-  SITES: /srv/sites
-
 jobs:
   preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Publish PR preview docs when docs/ changed
-        run: |
-          set -euo pipefail
-          REPO="${{ github.event.repository.name }}"
-          PR="${{ github.event.pull_request.number }}"
-          BASE="${{ github.base_ref }}"
-          # Detect docs/ changes in-job (no trigger paths filter) so the sticky comment
-          # posts on every PR — with a preview link when docs/ changed, prod-only when not.
-          git fetch -q origin "$BASE" 2>/dev/null || true
-          if git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
-            CHANGED="$(git diff --name-only "origin/$BASE...HEAD" -- docs 2>/dev/null || true)"
-          else
-            CHANGED="$(git diff --name-only HEAD~1 HEAD -- docs 2>/dev/null || true)"
-          fi
-          if [ -n "$CHANGED" ] && [ -d docs ]; then
-            echo "HAS_DOCS=1" >> "$GITHUB_ENV"
-            tar -C docs -cf - . | docker run --rm -i -v "$SITES":/out \
-              alpine:3 sh -c "rm -rf \"/out/pr/$REPO/$PR\" && mkdir -p \"/out/pr/$REPO/$PR\" && tar -C \"/out/pr/$REPO/$PR\" -xf -"
-            echo "Done: $DOCS_BASE/pr/$REPO/$PR/"
-          else
-            echo "HAS_DOCS=0" >> "$GITHUB_ENV"
-          fi
-      - name: Upsert sticky PR comment
-        env:
-          GITEA_API: http://gitea.example.com/api/v1
-          TOKEN: ${{ secrets.GITEA_TOKEN }}
-          REPO_FULL: ${{ github.repository }}
-          REPO: ${{ github.event.repository.name }}
-          PR: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.sha }}
-        run: |
-          # Internal gitea.example.com API: the public ROOT_URL isn't resolvable from a job
-          # container. The auto-injected GITEA_TOKEN can comment on same-repo PRs.
-          node - <<'NODE'
-          const e = process.env;
-          const [owner, repo] = e.REPO_FULL.split('/');
-          const pr = e.PR, marker = '<!-- docs-preview -->';
-          const hasDocs = e.HAS_DOCS === '1';
-          const body = hasDocs
-            ? `${marker}\n**Docs preview**\n\n- This PR (#${pr}): ${e.DOCS_BASE}/pr/${e.REPO}/${pr}/\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>Updated for \`${e.SHA}\`.</sub>`
-            : `${marker}\n**Docs**\n\n- main: ${e.DOCS_BASE}/${e.REPO}/\n\n<sub>No docs changes in this PR. Updated for \`${e.SHA}\`.</sub>`;
-          const h = { Authorization: `token ${e.TOKEN}`, 'Content-Type': 'application/json' };
-          const base = `${e.GITEA_API}/repos/${owner}/${repo}`;
-          (async () => {
-            const list = await fetch(`${base}/issues/${pr}/comments`, { headers: h }).then(r => r.json());
-            const mine = Array.isArray(list) ? list.find(c => c.body && c.body.includes(marker)) : null;
-            const res = mine
-              ? await fetch(`${base}/issues/comments/${mine.id}`, { method: 'PATCH', headers: h, body: JSON.stringify({ body }) })
-              : await fetch(`${base}/issues/${pr}/comments`, { method: 'POST', headers: h, body: JSON.stringify({ body }) });
-            console.log(`${mine ? 'patched' : 'posted'} comment -> ${res.status}`);
-            if (!res.ok) { console.error(await res.text()); process.exit(1); }
-          })().catch(err => { console.error(err); process.exit(1); });
-          NODE
+    uses: mathroze/workflows/.gitea/workflows/docs.yml@v1
+    with:
+      phase: preview
+    secrets: inherit

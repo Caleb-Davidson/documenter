@@ -1,6 +1,5 @@
-# Publishes docs/ to the shared docs-server at :8088/<repo>/ on merge to main.
-# Per-PR preview and teardown live in preview-docs.yml and cleanup-docs.yml.
-# All three share `name: docs`, so their checks read docs/prod, docs/preview, docs/cleanup.
+# Thin caller: on merge to main, delegate docs publishing to the central reusable
+# workflow. Triggers only on push to main, so it never appears as a PR check.
 
 name: docs
 on:
@@ -13,22 +12,9 @@ concurrency:
   group: docs-prod-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DOCS_BASE: http://docs.example.com
-  SITES: /srv/sites
-
 jobs:
   prod:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Publish prod docs
-        run: |
-          set -euo pipefail
-          REPO="${{ github.event.repository.name }}"
-          if [ ! -d docs ]; then echo "No docs/ — nothing to publish."; exit 0; fi
-          # tar docs/ over stdin into a throwaway alpine container that bind-mounts the
-          # docs-server volume from the host — no runner config or host path in this job.
-          tar -C docs -cf - . | docker run --rm -i -v "$SITES":/out \
-            alpine:3 sh -c "rm -rf \"/out/$REPO\" && mkdir -p \"/out/$REPO\" && tar -C \"/out/$REPO\" -xf -"
-          echo "Done: $DOCS_BASE/$REPO/"
+    uses: mathroze/workflows/.gitea/workflows/docs.yml@v1
+    with:
+      phase: prod
+    secrets: inherit
