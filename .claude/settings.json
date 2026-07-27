@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "EnterWorktree",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run setup:worktree",
+            "timeout": 120,
+            "statusMessage": "Setting up worktree (npm install)..."
+          }
+        ]
+      }
+    ]
+  }
+}
