@@ -1,2 +1,16 @@
-# Force LF in the working tree too, so local `core.autocrlf` can't diverge checkouts.
+# Normalize all text files to LF in the working tree on every OS. This matches
+# documenter's LF-based hashes, the Node/npm/editor defaults, and keeps diffs
+# consistent across Linux, macOS, and Windows. Binary files are auto-detected and
+# left untouched by `text=auto`.
 * text=auto eol=lf
+
+# Be explicit about binary asset types this repo may accumulate (docs images), so
+# they are never line-ending normalized regardless of auto-detection. Referenced
+# SVG diagrams are deliberately left as text — they are diffable and documenter
+# hashes them as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary

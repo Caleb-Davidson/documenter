@@ -19,10 +19,15 @@
     "sync-vendor": "node scripts/sync-vendor.mjs",
     "manifest": "node scripts/build-manifest.mjs",
     "test": "node --test",
-    "docs:lint": "documenter lint"
+    "docs:lint": "documenter lint",
+    "verify": "node scripts/verify.mjs",
+    "todo": "node scripts/todo.mjs",
+    "setup:worktree": "node scripts/setup-worktree.mjs",
+    "prepare": "husky"
   },
   "devDependencies": {
     "dompurify": "^3.0.0",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.0.0",
     "mermaid": "^11.16.0"
