@@ -1,0 +1,14 @@
+# Thin caller: on issue close, delegate status-label cleanup and blocked-issue
+# promotion to the shared reusable workflow. secrets: inherit passes this repo's
+# DOCS_BOT_GITEA_TOKEN through (the auto-injected token 500s on the label-DELETE
+# endpoint, so a real collaborator PAT is required). Pinned to an immutable tag.
+
+name: issue-label-cleanup
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  cleanup:
+    uses: mathroze/workflows/.gitea/workflows/issue-label-cleanup.yml@v1
+    secrets: inherit

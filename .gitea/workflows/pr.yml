@@ -1,0 +1,19 @@
+# Thin caller: the required PR gate, delegated to the shared reusable workflow so
+# every repo's check is wired the same way. Triggers on pull_request; passes this
+# repo's install + verify commands. Pinned to an immutable tag (see mathroze/workflows).
+
+name: pr
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    uses: mathroze/workflows/.gitea/workflows/pr.yml@v1
+    with:
+      install: npm ci
+      verify: npm run verify
