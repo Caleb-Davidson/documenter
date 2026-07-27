@@ -1,8 +1,15 @@
 # AGENTS.md
 
+@docs/coding-conventions.md
+@docs/unit-testing-conventions.md
+@docs/reviewing-conventions.md
+@docs/documentation-style-guide.md
+
 ## Project Description
 
 `documenter` is a CLI that scaffolds and maintains a repo-local markdown documentation system in any target project. End users run `documenter init` in their project to drop in a static-hostable docs shell (HTML + CSS + vendored JS), markdown templates, and a navigation manifest; later they run `documenter update` to refresh the platform files. The CLI uses SHA-256 hashes per managed file to distinguish stock files (safe to update) from user-modified ones (preserved by default). All heavy dependencies (`js-yaml`, `markdown-it`, `dompurify`, `mermaid`) live in documenter itself — target projects get vendored browser bundles and a single `docs:lint` script, no transitive devDependencies.
+
+> **Before you change anything:** run `npm run verify` (a husky pre-commit hook enforces it) and read the **Rules** and **Agent Workflow** below. Work is tracked as Gitea issues (`npm run todo`), implementation happens in a git worktree off protected `main`, and non-trivial features go through the feature team.
 
 ## Technologies Used
 
@@ -10,6 +17,8 @@
 - **`js-yaml` (devDep)**: Used by [lib/docs-lint.mjs](lib/docs-lint.mjs) to parse markdown frontmatter when linting target projects. Resolved from documenter's own `node_modules` even when the linter runs with `cwd=target`.
 - **`markdown-it`, `dompurify`, `mermaid` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells.
 - **Zero runtime dependencies**: The CLI itself imports only Node built-ins. Keep it that way (see Rules).
+- **`node:test` + `node:assert` (built-in)**: The test suite ([test/docs-lint.test.mjs](test/docs-lint.test.mjs)) runs on Node's built-in test runner via `npm test` — no third-party framework, consistent with the zero-dependency rule.
+- **husky (devDep)**: Runs the `npm run verify` gate as a pre-commit hook, so a green local run matches the pre-commit and CI.
 
 ## Project Structure
 
@@ -23,6 +32,12 @@
 - `lib/docs-lint.mjs`: The docs linter itself. Invoked via `child_process.spawn` with `cwd=target` by [src/commands/lint.mjs](src/commands/lint.mjs). Hardcodes `DOCS_DIR = "docs"` and walks relative paths, so it works against whatever cwd it's spawned in.
 - `scripts/sync-vendor.mjs`: Maintainer script. Copies `markdown-it.min.js`, `purify.min.js`, `js-yaml.min.js`, `mermaid.min.js` from `node_modules/*/dist/` into `template/docs/assets/vendor/`, and writes `versions.json` alongside them.
 - `scripts/build-manifest.mjs`: Maintainer script. Walks `template/`, SHA-256 hashes every file, writes `template/manifest.json`.
+- `scripts/verify.mjs`: The aggregate quality-gate runner behind `npm run verify` and the pre-commit hook — runs the `node --test` suite and `documenter lint` in parallel.
+- `scripts/todo.mjs`: The work-tracker CLI behind `npm run todo` (`list` / `details <n>` / `claim <n>`) — lists the open Gitea issues on `mathroze/documenter` grouped In Progress / Next / Blocked / Someday, shows one in full, or claims one. Work is tracked as Gitea issues, not an in-repo file.
+- `scripts/setup-worktree.mjs`: One-time worktree setup (currently `npm install`); runs automatically via a post-`EnterWorktree` hook (see `.claude/settings.json`).
+- `docs/`: This repo's own documenter-managed docs — the platform governing docs plus the engineering conventions (`coding-conventions.md`, `unit-testing-conventions.md`, `reviewing-conventions.md`) the feature team enforces.
+- `.claude/`: The agent workflow — `settings.json` (the worktree-setup hook), `skills/{issue-triage,feature-team}`, and `agents/{coder,tester,reviewer,doc-keeper}.md`.
+- `.gitea/workflows/`: Gitea Actions — `pr.yml` (the required `verify` check), `issue-label-cleanup.yml`, and the docs-publishing set (`publish-docs.yml`, `preview-docs.yml`, `cleanup-docs.yml`).
 - `template/`: Source of truth for everything scaffolded into target projects. The whole tree is hashed by the manifest generator.
 - `template/manifest.json`: Generated. Maps every relative path under `template/` to `{ sha256, size, isText }`. `sha256`/`size` are over LF-normalized content for text files (so they're stable regardless of how the maintainer's checkout handles EOLs); `isText` is the text/binary decision, consumed by both `init` and `update` so neither re-sniffs. Read by `init` and `update` to decide what to copy and how to classify drift.
 - `template/docs/`: The docs shell (`index.html`, `assets/`), three governing docs, seven copyable page templates plus a reusable `diagram-template.svg`, and the navigation manifest (`index.md`).
@@ -38,6 +53,12 @@ npm run sync-vendor       # Copy vendor bundles from node_modules into template/
                           # Run after `npm install` if devDep versions changed.
 npm run manifest          # Regenerate template/manifest.json — run this after ANY change to template/
 
+npm run verify            # The gate: node --test suite + documenter lint (run in parallel)
+npm test                  # Run the node:test suite only
+npm run docs:lint         # Lint this repo's own docs/ (documenter lint)
+npm run todo              # Work tracker: list open issues (also `todo details <n>` and `todo claim <n>`)
+npm run setup:worktree    # One-time worktree setup (npm install); runs automatically via a post-EnterWorktree hook
+
 documenter init [--cwd <path>] [--force]   # Scaffold into the current (or given) directory
 documenter update [--cwd <path>] [--force] # Refresh managed files, skipping drifted ones
 documenter lint [--cwd <path>]             # Run the internal docs linter against the target
@@ -45,7 +66,7 @@ documenter --version                       # Print CLI version
 documenter --help                          # Print help
 ```
 
-This project has no test suite, no type checker, and no formatter wired up. Validation is end-to-end: run the CLI against a fresh `/tmp/` directory and verify the resulting tree.
+The gate is `npm run verify` (the `node --test` suite plus `documenter lint`); there is no type checker or formatter. Beyond the gate, validate a scaffold change end-to-end by running the CLI against a fresh throwaway directory and inspecting the resulting tree.
 
 ## Architecture Hub
 
@@ -56,6 +77,7 @@ Before working on a system, read the relevant doc below. These are the source of
 - **[template/docs/documentation-architecture.md](template/docs/documentation-architecture.md)**: Describes the docs platform that gets shipped into target projects — shell runtime, manifest-driven navigation, sanitized rendering. Read before changing `template/docs/index.html`, `template/docs/assets/app.js`, or the docs-shell behavior.
 - **[template/docs/documentation-md-contract.md](template/docs/documentation-md-contract.md)**: Required structure for any markdown page in a target project's `docs/`. Read before changing what the linter enforces in [lib/docs-lint.mjs](lib/docs-lint.mjs) or before editing the page templates under `template/docs/templates/`.
 - **[template/docs/documentation-style-guide.md](template/docs/documentation-style-guide.md)**: Writing rules for the docs shipped into target projects. Read before editing seed content in `template/docs/`.
+- **[docs/coding-conventions.md](docs/coding-conventions.md)**, **[docs/unit-testing-conventions.md](docs/unit-testing-conventions.md)**, **[docs/reviewing-conventions.md](docs/reviewing-conventions.md)**: The engineering conventions the feature team enforces (also `@`-included at the top of this file). Read before writing or reviewing CLI code and tests.
 
 ## CLI Structure
 
@@ -72,6 +94,11 @@ State semantics that matter:
 - **When drift is detected and skipped**: do **not** rewrite the state entry to the on-disk hash. Keep the prior entry so a future revert-to-stock is still detectable. See [src/commands/update.mjs:111](src/commands/update.mjs:111).
 - **When `init` skips an existing file**: do **not** record a state entry for it. Documenter didn't write it, so it shouldn't claim ownership. See [src/commands/init.mjs:53](src/commands/init.mjs:53).
 
+## Build Targets
+
+- **The CLI itself** is the deliverable — there is no bundling or compile step. It is `private` and unpublished; distribution is `git clone` + `npm link`, and it runs straight from source on Node 20+.
+- **The scaffolded output** is what documenter produces in a target project: the docs shell, page templates, and vendored bundles under the target's `docs/`, plus a `.documenter.json` state file and a `docs:lint` script in `package.json`. `template/` is the source of truth for that output.
+
 ## Rules
 
 - **After ANY change to `template/`, run `npm run manifest`.** A stale manifest causes `update` to mis-classify drift in user projects. There is no automatic regeneration — it's manual and load-bearing.
@@ -85,23 +112,25 @@ State semantics that matter:
 - **All template files are POSIX-normalized in the manifest** (forward slashes in keys). [src/lib/manifest.mjs](src/lib/manifest.mjs:101) handles this via `toPosix()`. Don't introduce platform-specific path keys.
 - **Hashing is line-ending agnostic for text files.** Both the record path (`buildManifest`) and the check path (`update`) must route through the one shared `hashBuffer()` helper so they can never diverge. Don't add a second hashing path or compare raw bytes for text — that reintroduces the Windows false-drift bug (CRLF on disk vs LF manifest). Binary files (per `isTextFile()`) are hashed raw — never normalize them.
 - **Dogfood after every change.** This repo is itself documenter-managed (it has its own `docs/` and `.documenter.json`). Whenever you finish implementing a change, run `documenter update` in the repo root to refresh the in-repo `docs/` with the latest platform files, then commit the refreshed `docs/` alongside your change. Never hand-copy `template/docs/` files into `docs/` — always go through the CLI so the drift model is exercised end-to-end. Files the repo has intentionally customized (e.g. `docs/index.md`) will show as `drifted` and be skipped — that's expected; don't `--force` them without reason.
+- **Everything points at the gate.** Run `npm run verify` before completing any change; the husky pre-commit hook and the Gitea `pr.yml` check run the same gate, so a green local run matches CI. Code and tests follow the conventions in `docs/` (see the `@`-includes above); those are non-negotiable defaults and only the user grants an exception.
+- **Route non-trivial implementation through the feature team.** See [.claude/skills/feature-team/SKILL.md](.claude/skills/feature-team/SKILL.md). Skip the team only when **all four** hold: the change touches a single file, fewer than 20 lines change, the logic is straightforward, and at most one doc update is needed. Otherwise use the team.
+- **Commit with the `conventional-commit` skill** (Conventional Commits format). The repo is **LF-only**, enforced by `.gitattributes` — keep it that way.
 
 ## Agent Workflow
 
-When making changes:
-
-1. Read this `AGENTS.md`.
-2. Read [README.md](README.md) for the drift model and maintainer workflow.
-3. Read the architecture doc relevant to what you're touching (e.g., the docs contract before editing the linter).
-4. Inspect the existing implementation before editing.
-5. If you change anything under `template/`, run `npm run manifest` before reporting completion.
-6. If you bump a vendor dep, run `sync-vendor` and `manifest` in that order.
-7. Smoke-test end-to-end against a fresh `/tmp/` directory:
+1. **Check the work tracker** with `npm run todo` (the open Gitea issues on `mathroze/documenter`, grouped In Progress / Next / Blocked / Someday); `npm run todo details <n>` shows one in full. Claim an item with `npm run todo claim <n>` (adds the `in-progress` label); create or triage items with the `issue-triage` skill. Put `Fixes #<n>` in the PR description so the issue closes when it merges.
+2. **Read the docs first.** Read this `AGENTS.md`, [README.md](README.md) for the drift model and maintainer workflow, and the architecture doc relevant to what you're touching (e.g. the docs contract before editing the linter). Inspect the existing implementation before editing.
+3. **Research and planning may happen on `main`.** Before any actual implementation begins, create a worktree on a new branch off `main` — never implement directly on `main`. `EnterWorktree` fires a hook that runs `npm run setup:worktree` (`npm install`) so the fresh checkout can pass the gate.
+4. **For any non-trivial implementation, use the feature team** (see the Rules pointer and [.claude/skills/feature-team/SKILL.md](.claude/skills/feature-team/SKILL.md); the four "skip the team" criteria are there too).
+5. **Preserve the architecture** — the drift model, the zero-dependency rule, the `bin/ → src/commands → src/lib` layering, and the standalone linter — unless a redesign is explicitly requested.
+6. **If you changed anything under `template/`, run `npm run manifest`** before reporting completion. If you bumped a vendor dep, run `npm run sync-vendor` then `npm run manifest` (in that order) and commit the refreshed vendor bundles + manifest.
+7. **Update the affected docs** — this `AGENTS.md`, the relevant `docs/` pages, and `README.md` — when behavior, architecture, commands, or conventions change.
+8. **Smoke-test a scaffold change end-to-end** against a fresh throwaway directory:
    ```bash
    rm -rf /tmp/docu-test && documenter init --cwd /tmp/docu-test && documenter lint --cwd /tmp/docu-test
    ```
-8. Update README.md when the drift model, command surface, or maintainer workflow changes.
-9. **Dogfood before reporting completion:** run `documenter update` in the repo root to refresh the in-repo `docs/` with your latest changes, and commit the refreshed `docs/` files. (See the dogfood rule above.)
+9. **Run `npm run verify`** before reporting completion, and **dogfood**: run `documenter update` in the repo root to refresh the in-repo `docs/`, committing the refreshed files alongside your change.
+10. **Push the branch and open a pull request against `main`.** `main` is protected and only the user merges into it, so implementation is not complete until the PR is open — never push to or merge `main` directly. Gitea Actions runs `npm run verify` as a required check. History is linear and PRs merge by fast-forward, so keep the branch rebased on `main`: if the PR reports conflicts, `git rebase` onto the latest `main` (never merge `main` into the branch), resolve, re-run `npm run verify`, and force-push with `--force-with-lease`. Before reporting done, tear down anything you started (dev servers, background processes). Once the user merges, switch back to the main checkout, `git pull`, and remove the worktree.
 
 ## Notes for Future Agents
 
@@ -109,6 +138,8 @@ When making changes:
 - **`template/manifest.json` and target `.documenter.json` are generated files.** Treat as build artifacts: regenerate them, don't edit them.
 - **`template/docs/assets/vendor/*.min.js` and `versions.json` are committed.** This is deliberate — it gives the manifest deterministic hashes. Refresh via `npm run sync-vendor`, not by hand.
 - **The CLI is intended for `npm link`-based local install on developer machines.** It is private (`"private": true` in `package.json`) and not published to a registry. Distribution is `git clone` + `npm link`.
-- **There is no test suite.** Validation is the smoke test in §Agent Workflow. If you add automated tests, place them under a new `test/` directory and add an `npm test` script.
+- **The gate is `npm run verify`** — the `node:test` suite (`test/*.test.mjs`) plus `documenter lint` over this repo's own `docs/`. Add new tests under `test/`; there is no type checker or formatter to satisfy.
+- **Keep this section low-churn.** It is for stable, high-value gotchas — not project or implementation status, which lives in the code, the docs, and git history and would go stale here while still being trusted.
+- **When the user pushes back on a recommendation, re-reason and state your honest view** — don't reflexively concede. Update only what the correction actually invalidates, then give your real opinion and leave the decision with the user.
 - **The `example-app/` directory does not exist in this repo.** It was a one-time example used during initial extraction and has been removed. Don't reintroduce it.
 - **`lib/docs-lint.mjs` was extracted from a target project** and still has minor remnants of that context (JSDoc typedefs, etc.) — that's expected. Its `checkVendorVersions` function was removed when it moved here; don't reintroduce it (manifest hashes cover integrity now).
