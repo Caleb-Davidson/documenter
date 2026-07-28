@@ -55,6 +55,7 @@ Commands:
 Options:
   --cwd <path>    Target directory (default: process.cwd()).
   --force         For init/update: overwrite files instead of skipping.
+  --check         For update: dry run — report what is stale and fail, writing nothing.
   --title <text>  For init: set the docs site title (docs/index.md 'title' → sidebar heading).
   --help, -h      Print this help.
   --version, -v   Print version.

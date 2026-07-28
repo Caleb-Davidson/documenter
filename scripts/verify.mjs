@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 // The quality gate. Runs every available check in parallel and exits non-zero if
 // any fails, so a green local run matches the pre-commit hook. `test` runs the
-// node:test suite (currently the docs-linter end-to-end tests); `docs:lint` runs
-// the internal documenter linter over this repo's own docs/. Add checks here as
-// the project grows a typecheck, lint, or format step.
+// node:test suite over test/*.test.mjs; `docs:lint` runs the internal documenter
+// linter over this repo's own docs/. Add checks here as the project grows a
+// typecheck, lint, or format step.
+//
+// `manifest` and `dogfood` guard the two generated artifacts the workflow expects a
+// maintainer to refresh by hand. Both go through a local `node` invocation rather than
+// the `documenter` bin, which is only on PATH when a machine has run `npm link`.
 import { spawn } from "node:child_process";
 
 const checks = [
   { name: "test", command: "npm test" },
   { name: "docs:lint", command: "npm run docs:lint" },
+  { name: "manifest", command: "node scripts/build-manifest.mjs --check" },
+  { name: "dogfood", command: "node bin/documenter.mjs update --check --cwd ." },
 ];
 
 /**

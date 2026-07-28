@@ -17,7 +17,7 @@
 - **`js-yaml` (devDep)**: Used by [lib/docs-lint.mjs](lib/docs-lint.mjs) to parse markdown frontmatter when linting target projects. Resolved from documenter's own `node_modules` even when the linter runs with `cwd=target`.
 - **`markdown-it`, `dompurify`, `mermaid` (devDeps)**: Not imported by any CLI source. Installed only so [scripts/sync-vendor.mjs](scripts/sync-vendor.mjs) can copy their minified browser bundles into `template/docs/assets/vendor/`, where they get shipped into target projects' docs shells.
 - **Zero runtime dependencies**: The CLI itself imports only Node built-ins. Keep it that way (see Rules).
-- **`node:test` + `node:assert` (built-in)**: The test suite ([test/docs-lint.test.mjs](test/docs-lint.test.mjs)) runs on Node's built-in test runner via `npm test` — no third-party framework, consistent with the zero-dependency rule.
+- **`node:test` + `node:assert` (built-in)**: The test suite (`test/*.test.mjs`) runs on Node's built-in test runner via `npm test` — no third-party framework, consistent with the zero-dependency rule.
 - **husky (devDep)**: Runs the `npm run verify` gate as a pre-commit hook, so a green local run matches the pre-commit and CI.
 
 ## Project Structure
@@ -31,8 +31,8 @@
 - `src/lib/package-json.mjs`: `REQUIRED_SCRIPTS` (just `"docs:lint": "documenter lint"`), `mergeDocsScaffold()`, `minimalPackageJson()`. Additive merge — never overwrites existing keys in target package.json.
 - `lib/docs-lint.mjs`: The docs linter itself. Invoked via `child_process.spawn` with `cwd=target` by [src/commands/lint.mjs](src/commands/lint.mjs). Hardcodes `DOCS_DIR = "docs"` and walks relative paths, so it works against whatever cwd it's spawned in.
 - `scripts/sync-vendor.mjs`: Maintainer script. Copies `markdown-it.min.js`, `purify.min.js`, `js-yaml.min.js`, `mermaid.min.js` from `node_modules/*/dist/` into `template/docs/assets/vendor/`, and writes `versions.json` alongside them.
-- `scripts/build-manifest.mjs`: Maintainer script. Walks `template/`, SHA-256 hashes every file, writes `template/manifest.json`.
-- `scripts/verify.mjs`: The aggregate quality-gate runner behind `npm run verify` and the pre-commit hook — runs the `node --test` suite and `documenter lint` in parallel.
+- `scripts/build-manifest.mjs`: Maintainer script. Walks `template/`, SHA-256 hashes every file, writes `template/manifest.json`. With `--check` it rebuilds in memory and exits non-zero if the committed manifest no longer describes `template/`, writing nothing — that mode is the gate's `manifest` check.
+- `scripts/verify.mjs`: The aggregate quality-gate runner behind `npm run verify` and the pre-commit hook — runs four checks in parallel: the `node --test` suite, `documenter lint`, manifest freshness, and dogfood freshness.
 - `scripts/todo.mjs`: The work-tracker CLI behind `npm run todo` (`list` / `details <n>` / `claim <n>`) — lists the open Gitea issues on `mathroze/documenter` grouped In Progress / Next / Blocked / Someday, shows one in full, or claims one. Work is tracked as Gitea issues, not an in-repo file.
 - `scripts/setup-worktree.mjs`: One-time worktree setup (currently `npm install`); runs automatically via a post-`EnterWorktree` hook (see `.claude/settings.json`).
 - `docs/`: This repo's own documenter-managed docs — the platform governing docs plus the engineering conventions (`coding-conventions.md`, `unit-testing-conventions.md`, `reviewing-conventions.md`) the feature team enforces.
@@ -52,8 +52,11 @@ npm unlink -g documenter  # Reverse the above
 npm run sync-vendor       # Copy vendor bundles from node_modules into template/docs/assets/vendor/
                           # Run after `npm install` if devDep versions changed.
 npm run manifest          # Regenerate template/manifest.json — run this after ANY change to template/
+                          # Dry run (writes nothing, fails on a stale manifest — the gate's check):
+                          #   node scripts/build-manifest.mjs --check
 
-npm run verify            # The gate: node --test suite + documenter lint (run in parallel)
+npm run verify            # The gate, four checks in parallel: node --test suite, documenter lint,
+                          # manifest freshness, dogfood freshness (this repo's own docs/ + state)
 npm test                  # Run the node:test suite only
 npm run docs:lint         # Lint this repo's own docs/ (documenter lint)
 npm run todo              # Work tracker: list open issues (also `todo details <n>` and `todo claim <n>`)
@@ -61,12 +64,13 @@ npm run setup:worktree    # One-time worktree setup (npm install); runs automati
 
 documenter init [--cwd <path>] [--force]   # Scaffold into the current (or given) directory
 documenter update [--cwd <path>] [--force] # Refresh managed files, skipping drifted ones
+documenter update --check --cwd .          # Dry run: fail if managed files are stale, write nothing
 documenter lint [--cwd <path>]             # Run the internal docs linter against the target
 documenter --version                       # Print CLI version
 documenter --help                          # Print help
 ```
 
-The gate is `npm run verify` (the `node --test` suite plus `documenter lint`); there is no type checker or formatter. Beyond the gate, validate a scaffold change end-to-end by running the CLI against a fresh throwaway directory and inspecting the resulting tree.
+The gate is `npm run verify` (the `node --test` suite, `documenter lint`, and the two generated-files-are-current checks — manifest freshness and dogfood freshness); there is no type checker or formatter. Beyond the gate, validate a scaffold change end-to-end by running the CLI against a fresh throwaway directory and inspecting the resulting tree.
 
 ## Architecture Hub
 
@@ -101,7 +105,7 @@ State semantics that matter:
 
 ## Rules
 
-- **After ANY change to `template/`, run `npm run manifest`.** A stale manifest causes `update` to mis-classify drift in user projects. There is no automatic regeneration — it's manual and load-bearing.
+- **After ANY change to `template/`, run `npm run manifest`.** A stale manifest causes `update` to mis-classify drift in user projects. Regeneration is manual, but the gate enforces it: `npm run verify` (and so the pre-commit hook and CI) fails when the committed manifest no longer matches `template/`.
 - **After bumping `js-yaml`, `markdown-it`, `dompurify`, or `mermaid` in `package.json`**: `npm install` → `npm run sync-vendor` → `npm run manifest`. Commit all three: updated `package-lock.json`, refreshed `template/docs/assets/vendor/*`, and the new `template/manifest.json`.
 - **Keep zero runtime dependencies.** `bin/` and `src/` import only Node built-ins. Do not add a `dependencies` block to `package.json`. `devDependencies` are for tooling and vendored browser bundles only.
 - **Do not hand-edit `template/manifest.json`** — it's generated by `scripts/build-manifest.mjs`. Edit `template/` content, then regenerate.
@@ -111,7 +115,7 @@ State semantics that matter:
 - **`additive merge only` for target `package.json`.** [src/lib/package-json.mjs](src/lib/package-json.mjs) must never overwrite an existing script or dependency in a user's package.json.
 - **All template files are POSIX-normalized in the manifest** (forward slashes in keys). [src/lib/manifest.mjs](src/lib/manifest.mjs:101) handles this via `toPosix()`. Don't introduce platform-specific path keys.
 - **Hashing is line-ending agnostic for text files.** Both the record path (`buildManifest`) and the check path (`update`) must route through the one shared `hashBuffer()` helper so they can never diverge. Don't add a second hashing path or compare raw bytes for text — that reintroduces the Windows false-drift bug (CRLF on disk vs LF manifest). Binary files (per `isTextFile()`) are hashed raw — never normalize them.
-- **Dogfood after every change.** This repo is itself documenter-managed (it has its own `docs/` and `.documenter.json`). Whenever you finish implementing a change, run `documenter update` in the repo root to refresh the in-repo `docs/` with the latest platform files, then commit the refreshed `docs/` alongside your change. Never hand-copy `template/docs/` files into `docs/` — always go through the CLI so the drift model is exercised end-to-end. Files the repo has intentionally customized (e.g. `docs/index.md`) will show as `drifted` and be skipped — that's expected; don't `--force` them without reason.
+- **Dogfood after every change.** This repo is itself documenter-managed (it has its own `docs/` and `.documenter.json`). Whenever you finish implementing a change, run `documenter update` in the repo root to refresh the in-repo `docs/` with the latest platform files, then commit the refreshed `docs/` alongside your change. Never hand-copy `template/docs/` files into `docs/` — always go through the CLI so the drift model is exercised end-to-end. Files the repo has intentionally customized (e.g. `docs/index.md`) will show as `drifted` and be skipped — that's expected; don't `--force` them without reason. The gate enforces this too: `npm run verify` fails when the in-repo `docs/` or `.documenter.json` is stale (drifted files never fail it).
 - **Everything points at the gate.** Run `npm run verify` before completing any change; the husky pre-commit hook and the Gitea `pr.yml` check run the same gate, so a green local run matches CI. Code and tests follow the conventions in `docs/` (see the `@`-includes above); those are non-negotiable defaults and only the user grants an exception.
 - **Route non-trivial implementation through the feature team.** See [.claude/skills/feature-team/SKILL.md](.claude/skills/feature-team/SKILL.md). Skip the team only when **all four** hold: the change touches a single file, fewer than 20 lines change, the logic is straightforward, and at most one doc update is needed. Otherwise use the team.
 - **Commit with the `conventional-commit` skill** (Conventional Commits format). The repo is **LF-only**, enforced by `.gitattributes` — keep it that way.
@@ -150,7 +154,7 @@ These are load-bearing for documenter and run **in addition to** the shared step
 - **`template/manifest.json` and target `.documenter.json` are generated files.** Treat as build artifacts: regenerate them, don't edit them.
 - **`template/docs/assets/vendor/*.min.js` and `versions.json` are committed.** This is deliberate — it gives the manifest deterministic hashes. Refresh via `npm run sync-vendor`, not by hand.
 - **The CLI is intended for `npm link`-based local install on developer machines.** It is private (`"private": true` in `package.json`) and not published to a registry. Distribution is `git clone` + `npm link`.
-- **The gate is `npm run verify`** — the `node:test` suite (`test/*.test.mjs`) plus `documenter lint` over this repo's own `docs/`. Add new tests under `test/`; there is no type checker or formatter to satisfy.
+- **The gate is `npm run verify`** — the `node:test` suite (`test/*.test.mjs`), `documenter lint` over this repo's own `docs/`, and two generated-files-are-current checks (is `template/manifest.json` fresh, and has the in-repo `docs/` been dogfooded). Add new tests under `test/`; there is no type checker or formatter to satisfy.
 - **Keep this section low-churn.** It is for stable, high-value gotchas — not project or implementation status, which lives in the code, the docs, and git history and would go stale here while still being trusted.
 - **When the user pushes back on a recommendation, re-reason and state your honest view** — don't reflexively concede. Update only what the correction actually invalidates, then give your real opinion and leave the decision with the user.
 - **The `example-app/` directory does not exist in this repo.** It was a one-time example used during initial extraction and has been removed. Don't reintroduce it.

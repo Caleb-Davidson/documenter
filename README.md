@@ -60,9 +60,12 @@ Classification compares content hashes, not line endings — a file re-saved wit
 ```sh
 documenter update                        # safe: skips drifted files
 documenter update --force                # overwrite drifted files too
+documenter update --check                # dry run: report staleness and fail, write nothing
 ```
 
 The state file is updated only for files documenter actually wrote. Drifted files keep their previous state record, so reverting to stock is detected on the next run.
+
+`--check` runs the same classification but writes nothing: it prints what a real update would add, update, or re-record in the state file, and exits non-zero if anything is pending. Drifted files are the expected steady state, so they never make it fail. Use it in CI or a pre-commit hook to catch a project whose `docs/` were never refreshed — documenter's own gate does exactly that.
 
 ### `documenter lint`
 
@@ -80,6 +83,7 @@ It checks required frontmatter, template-section parity, heading structure, `ind
 |---|---|---|
 | `--cwd <path>` | all | Target a directory other than the current one. |
 | `--force` | `init`, `update` | Overwrite files that would normally be preserved. |
+| `--check` | `update` | Dry run. Report what a real update would change and exit non-zero if anything is pending; write nothing. Drifted files don't count as pending. |
 | `--title <text>` | `init` | Set the docs site title (written to `docs/index.md` frontmatter `title`, shown as the sidebar heading). If omitted, defaults to "Project Documentation" and `init` reminds you to set it. |
 | `--help` / `-h` | top-level | Print help. |
 | `--version` / `-v` | top-level | Print CLI version. |
@@ -96,12 +100,17 @@ npm run sync-vendor                      # copies bundles into template/docs/ass
 # 2. (always after any template change)
 npm run manifest                         # rewrites template/manifest.json with fresh hashes
 
-# 3. commit:
-git add template/ package.json package-lock.json
+# 3. (always) dogfood: refresh this repo's own docs/ through the CLI
+documenter update                        # never hand-copy template/docs/ into docs/
+
+# 4. commit:
+git add template/ docs/ .documenter.json package.json package-lock.json
 git commit -m "..."
 ```
 
 `template/manifest.json` is the source of truth for what gets copied and how it's hashed. End users see drift detection that's only as accurate as your manifest is current — don't forget to regenerate it.
+
+Both regeneration steps are enforced by the `npm run verify` gate (and so by the pre-commit hook and CI), which fails when the committed manifest no longer matches `template/`, or when this repo's own `docs/` and `.documenter.json` are behind the template. Their read-only equivalents are `node scripts/build-manifest.mjs --check` and `documenter update --check`.
 
 ## What gets scaffolded into a target project
 

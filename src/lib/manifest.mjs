@@ -128,6 +128,64 @@ export async function buildManifest(root, cliVersion) {
   };
 }
 
+/**
+ * Compare the manifest committed under `root` against a fresh hash of that tree, so a
+ * caller can tell whether `npm run manifest` still needs to run. `generatedAt` is
+ * ignored: it changes on every regeneration and says nothing about the recorded hashes.
+ *
+ * A root with no manifest at all reads as one recording nothing, so every file on disk
+ * comes back as `missing`.
+ *
+ * @param {string} root Template root holding both the tree and its manifest.
+ * @param {string} cliVersion Version the manifest is expected to record.
+ * @returns {Promise<{ stale: string[], missing: string[], extra: string[], versionChanged: { recorded: string, expected: string } | null }>}
+ *   `stale`: recorded differently than a rebuild would record it. `missing`: on disk but
+ *   unrecorded. `extra`: recorded but gone from disk. All three POSIX-separated and sorted.
+ */
+export async function diffManifestAgainstDisk(root, cliVersion) {
+  const rebuilt = await buildManifest(root, cliVersion);
+  const committed =
+    (await readManifest(join(root, MANIFEST_FILENAME))) ?? { documenterVersion: cliVersion, files: {} };
+
+  const stale = [];
+  const missing = [];
+  for (const [relPath, info] of Object.entries(rebuilt.files)) {
+    const recorded = committed.files[relPath];
+    if (!recorded) missing.push(relPath);
+    else if (!recordsSameEntry(recorded, info)) stale.push(relPath);
+  }
+
+  return {
+    stale: stale.sort(),
+    missing: missing.sort(),
+    extra: Object.keys(committed.files).filter((relPath) => !(relPath in rebuilt.files)).sort(),
+    versionChanged:
+      committed.documenterVersion === cliVersion
+        ? null
+        : { recorded: committed.documenterVersion, expected: cliVersion }
+  };
+}
+
+/**
+ * Whether a committed manifest entry still matches what a rebuild produces.
+ *
+ * The whole entry is compared, not just `sha256`: a CR-free file hashes identically
+ * whether it was treated as text or binary, so an `isTextFile()` change that flips
+ * `isText` would otherwise be invisible here — and `update` reads `isText` to pick the
+ * line ending it writes with, so a wrong flag rewrites EOLs in a binary file.
+ *
+ * @param {{ sha256: string, size: number, isText: boolean }} recorded Entry from the committed manifest.
+ * @param {{ sha256: string, size: number, isText: boolean }} rebuilt Entry a rebuild produces.
+ * @returns {boolean}
+ */
+function recordsSameEntry(recorded, rebuilt) {
+  return (
+    recorded.sha256 === rebuilt.sha256 &&
+    recorded.size === rebuilt.size &&
+    recorded.isText === rebuilt.isText
+  );
+}
+
 export async function readManifest(path) {
   if (!(await exists(path))) return null;
   return JSON.parse(await readFile(path, "utf-8"));

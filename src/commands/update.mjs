@@ -37,7 +37,8 @@ export async function runUpdate(argv) {
     args: argv,
     options: {
       cwd: { type: "string" },
-      force: { type: "boolean", default: false }
+      force: { type: "boolean", default: false },
+      check: { type: "boolean", default: false }
     },
     allowPositionals: false
   });
@@ -63,6 +64,7 @@ export async function runUpdate(argv) {
 
   /** Write a managed file from the template using the target's preferred EOL. */
   async function writeFromTemplate(src, dest, relPath, info) {
+    if (values.check) return; // --check classifies the whole tree but touches nothing
     const isText = info.isText ?? true;
     const eol = isText ? await eolResolver.eolFor(relPath) : "\n";
     await writeManagedFile(src, dest, { isText, eol });
@@ -121,6 +123,18 @@ export async function runUpdate(argv) {
     }
   }
 
+  if (values.check) {
+    const pending = pendingChanges(reports, priorState.managedFiles ?? {}, nextState.managedFiles);
+    console.log("");
+    if (pending.length === 0) {
+      console.log(`--check: ${unchanged} managed files current, ${drifted} drifted (user-owned).`);
+      return;
+    }
+    console.log("--check: this target is out of date. A real update would:");
+    for (const line of pending) console.log(`  ${line}`);
+    throw new Error("managed files are out of date — run 'documenter update' and commit the result.");
+  }
+
   await writeState(target, nextState);
 
   const pkgSummary = await syncPackageJson(target);
@@ -146,6 +160,30 @@ export async function runUpdate(argv) {
       console.log(`  ${label.padEnd(20)} ${r.path}`);
     }
   }
+}
+
+/**
+ * What a real update would change in the target, one report line each. Empty means the
+ * target is current.
+ *
+ * Drifted files are left out on purpose: a user-owned edit is the expected steady state,
+ * not staleness. A recorded hash that differs from what this run would record is included —
+ * it means a managed file changed hands without going through the CLI.
+ *
+ * @param {{ classification: string, path: string }[]} reports Per-file classifications from the pass above.
+ * @param {Record<string, { sha256: string }>} priorFiles `managedFiles` recorded in the target's state.
+ * @param {Record<string, { sha256: string }>} nextFiles `managedFiles` this run would record.
+ * @returns {string[]}
+ */
+function pendingChanges(reports, priorFiles, nextFiles) {
+  const writes = reports
+    .filter((r) => r.classification === "new" || r.classification === "stock-old")
+    .map((r) => `${(r.classification === "new" ? "add" : "update").padEnd(18)}${r.path}`);
+  const restated = Object.keys({ ...priorFiles, ...nextFiles })
+    .filter((relPath) => priorFiles[relPath]?.sha256 !== nextFiles[relPath]?.sha256)
+    .sort()
+    .map((relPath) => `${"re-record state".padEnd(18)}${relPath}`);
+  return [...writes, ...restated];
 }
 
 /**

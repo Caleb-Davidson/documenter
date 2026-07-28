@@ -18,8 +18,11 @@ maintains a Markdown docs system in target projects. It is `private`/unpublished
 - **Package manager:** `npm`.
 - **Targeted tests** (coder/tester red→green loop): `node --test test/<file>.test.mjs` (point it at the
   one file you're driving; the suite is plain `node --test` over `test/*.test.mjs`).
-- **The quality gate** (lead runs it end-of-phase): `npm run verify` — the `node --test` suite **plus
-  `documenter lint`** over this repo's own `docs/`, run in parallel.
+- **The quality gate** (lead runs it end-of-phase): `npm run verify` — four checks in parallel: the
+  `node --test` suite, `documenter lint` over this repo's own `docs/`, **manifest freshness**
+  (`node scripts/build-manifest.mjs --check`), and **dogfood freshness**
+  (`node bin/documenter.mjs update --check --cwd .`). The last two make the two manual regeneration
+  steps below gate-enforced; both write nothing.
 - **Docs lint** (doc-keeper): `npm run docs:lint` (= `documenter lint`).
 - Full command list is in `AGENTS.md` → Commands.
 

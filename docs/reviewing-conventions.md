@@ -26,8 +26,9 @@ matter.
 
 ### Out of scope
 
-- The mechanical gate — the `node --test` suite and the `documenter lint` docs check are enforced by
-  `npm run verify`, not reviewed.
+- The mechanical gate — the `node --test` suite, the `documenter lint` docs check, and the
+  generated-files-are-current checks (a fresh `template/manifest.json`, dogfooded in-repo `docs/`) are
+  enforced by `npm run verify`, not reviewed.
 - Documentation structural compliance — frontmatter fields, heading order, link policy, and HTML
   policy are enforced by `npm run docs:lint`; do not re-flag them.
 - Unit-test authoring — see [Unit Testing Conventions](./unit-testing-conventions.md).
