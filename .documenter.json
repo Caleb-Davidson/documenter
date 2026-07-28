@@ -1,6 +1,6 @@
 {
   "documenterVersion": "0.1.0",
-  "lastSyncedAt": "2026-07-26T05:44:39.725Z",
+  "lastSyncedAt": "2026-07-28T05:50:58.418Z",
   "managedFiles": {
     "docs/assets/app.js": {
       "sha256": "6b5959439e3f9bca0534ac2828f8d5b40a0916bd8d8105ad74c08cc93e28d5be",
@@ -43,7 +43,7 @@
       "writtenAt": "2026-07-26T01:30:12.974Z"
     },
     "docs/documentation-md-contract.md": {
-      "sha256": "1c46fbc59e8830317f289474a001338357bbc63ad19b812e639206016aa1ccf6",
+      "sha256": "b915b43632d452cca9255f1aa4fe0a4a535913314a02399d6a1335f9ad7b82d1",
       "writtenBy": "0.1.0",
       "writtenAt": "2026-07-26T01:39:05.746Z"
     },
