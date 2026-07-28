@@ -118,19 +118,31 @@ State semantics that matter:
 
 ## Agent Workflow
 
-1. **Check the work tracker** with `npm run todo` (the open Gitea issues on `mathroze/documenter`, grouped In Progress / Next / Blocked / Someday); `npm run todo details <n>` shows one in full. Claim an item with `npm run todo claim <n>` (adds the `in-progress` label); create or triage items with the `issue-triage` skill. Put `Fixes #<n>` in the PR description so the issue closes when it merges.
-2. **Read the docs first.** Read this `AGENTS.md`, [README.md](README.md) for the drift model and maintainer workflow, and the architecture doc relevant to what you're touching (e.g. the docs contract before editing the linter). Inspect the existing implementation before editing.
-3. **Research and planning may happen on `main`.** Before any actual implementation begins, create a worktree on a new branch off `main` — never implement directly on `main`. `EnterWorktree` fires a hook that runs `npm run setup:worktree` (`npm install`) so the fresh checkout can pass the gate.
-4. **For any non-trivial implementation, use the feature team** (see the Rules pointer and [.claude/skills/feature-team/SKILL.md](.claude/skills/feature-team/SKILL.md); the four "skip the team" criteria are there too).
-5. **Preserve the architecture** — the drift model, the zero-dependency rule, the `bin/ → src/commands → src/lib` layering, and the standalone linter — unless a redesign is explicitly requested.
-6. **If you changed anything under `template/`, run `npm run manifest`** before reporting completion. If you bumped a vendor dep, run `npm run sync-vendor` then `npm run manifest` (in that order) and commit the refreshed vendor bundles + manifest.
-7. **Update the affected docs** — this `AGENTS.md`, the relevant `docs/` pages, and `README.md` — when behavior, architecture, commands, or conventions change.
-8. **Smoke-test a scaffold change end-to-end** against a fresh throwaway directory:
-   ```bash
-   rm -rf /tmp/docu-test && documenter init --cwd /tmp/docu-test && documenter lint --cwd /tmp/docu-test
-   ```
-9. **Run `npm run verify`** before reporting completion, and **dogfood**: run `documenter update` in the repo root to refresh the in-repo `docs/`, committing the refreshed files alongside your change.
-10. **Push the branch and open a pull request against `main`.** `main` is protected and only the user merges into it, so implementation is not complete until the PR is open — never push to or merge `main` directly. Gitea Actions runs `npm run verify` as a required check. History is linear and PRs merge by fast-forward, so keep the branch rebased on `main`: if the PR reports conflicts, `git rebase` onto the latest `main` (never merge `main` into the branch), resolve, re-run `npm run verify`, and force-push with `--force-with-lease`. Before reporting done, tear down anything you started (dev servers, background processes). Once the user merges, switch back to the main checkout, `git pull`, and remove the worktree.
+@AGENT-WORKFLOW.md
+
+The shared lifecycle above (claim → worktree → feature-team-or-solo → gate → PR → cleanup) is
+maintained centrally via skillful and reads this file's `## Commands` for the concrete tracker and
+gate commands, the Architecture Hub / Rules for the drift model and layering to preserve, and
+[README.md](README.md) for the drift model and maintainer workflow. `EnterWorktree` fires a hook that
+runs `npm run setup:worktree` (`npm install`) so the fresh checkout can pass the gate. History is
+linear and PRs merge by fast-forward, so if a PR reports conflicts, `git rebase` onto the latest `main`
+(never merge `main` into the branch), re-run `npm run verify`, and force-push with `--force-with-lease`.
+
+### Project-specific workflow steps
+
+These are load-bearing for documenter and run **in addition to** the shared steps, before the gate:
+
+- **If you changed anything under `template/`, run `npm run manifest`.** A stale manifest makes
+  `update` mis-classify drift in user projects. If you bumped a vendored devDep, run `npm install` →
+  `npm run sync-vendor` → `npm run manifest` (in that order) and commit the refreshed
+  `package-lock.json`, vendor bundles, and manifest together.
+- **Smoke-test a scaffold change end-to-end** against a fresh throwaway directory:
+  ```bash
+  rm -rf /tmp/docu-test && documenter init --cwd /tmp/docu-test && documenter lint --cwd /tmp/docu-test
+  ```
+- **Dogfood** after every change: run `documenter update` in the repo root to refresh the in-repo
+  `docs/`, and commit the refreshed files alongside your change (never hand-copy `template/docs/`).
+- **Teardown:** tear down only what you launched locally; the CI preview/docs workflows are Gitea-owned.
 
 ## Notes for Future Agents
 
